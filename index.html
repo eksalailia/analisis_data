@@ -13,7 +13,7 @@
 </head>
 <body class="bg-gradient-to-br from-blue-600 to-indigo-900 min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden p-6 md:p-8">
+    <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden p-6 md:p-8 my-6">
         
         <!-- HEADER -->
         <div class="text-center mb-6">
@@ -24,7 +24,7 @@
         <!-- 1. FORM IDENTITAS SISWA -->
         <div id="identity-section" class="space-y-4">
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 text-blue-700 text-sm mb-4">
-                Silakan isi identitas dengan benar sebelum memulai kuis. Soal akan diacak dan memiliki batas waktu 30 detik per soal tanpa tombol kembali.
+                Silakan isi identitas dengan benar sebelum memulai kuis. Soal akan diacak dan memiliki batas waktu 35 detik per soal tanpa tombol kembali.
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
@@ -81,23 +81,39 @@
             </button>
         </div>
 
-        <!-- 3. SECTION HASIL -->
-        <div id="result-section" class="hidden text-center space-y-4">
-            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-4xl shadow-inner">
-                🎉
+        <!-- 3. SECTION HASIL, REWARD, FEEDBACK & PEMBAHASAN -->
+        <div id="result-section" class="hidden space-y-6">
+            <div class="text-center space-y-2">
+                <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-4xl shadow-inner">
+                    🎉
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Kuis Selesai!</h2>
+                <p class="text-gray-600">Terima kasih telah mengerjakan kuis analisis data.</p>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800">Kuis Selesai!</h2>
-            <p class="text-gray-600">Terima kasih telah mengerjakan kuis analisis data.</p>
             
-            <div class="bg-gray-50 p-6 rounded-xl border max-w-sm mx-auto space-y-2 text-left">
+            <!-- Ringkasan Identitas & Nilai -->
+            <div class="bg-gray-50 p-6 rounded-xl border max-w-md mx-auto space-y-2 text-left shadow-sm">
                 <p><strong>Nama:</strong> <span id="res-nama">-</span></p>
                 <p><strong>Absen:</strong> <span id="res-absen">-</span></p>
                 <p><strong>Kelas:</strong> <span id="res-kelas">-</span></p>
-                <hr>
+                <hr class="my-2">
                 <p class="text-xl font-bold text-center text-blue-600">Nilai Akhir: <span id="res-score">0</span></p>
             </div>
 
-            <div id="sync-status" class="text-xs text-gray-500 italic">Mengirim data ke sistem guru...</div>
+            <!-- CONTAINER REWARD ATAU FEEDBACK BERDASARKAN NILAI -->
+            <div id="reward-feedback-box" class="max-w-md mx-auto"></div>
+
+            <div id="sync-status" class="text-xs text-center text-gray-500 italic">Mengirim data ke sistem guru...</div>
+
+            <!-- Pembahasan Soal -->
+            <div class="mt-8 border-t pt-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    📋 Pembahasan Soal
+                </h3>
+                <div id="review-container" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                    <!-- Item pembahasan akan digenerate via JavaScript -->
+                </div>
+            </div>
         </div>
 
     </div>
@@ -211,8 +227,9 @@
 
             detailAnswers.push({
                 soal: currentQ.q,
-                jawabanSiswa: userAnswer,
-                status: isCorrect ? "BENAR" : "SALAH"
+                jawabanSiswa: userAnswer || "(Tidak dijawab / Waktu habis)",
+                kunciJawaban: currentQ.keys[0],
+                status: isCorrect && !isTimeout && userAnswer !== "" ? "BENAR" : "SALAH"
             });
 
             currentIndex++;
@@ -231,11 +248,84 @@
             document.getElementById('res-kelas').innerText = studentData.kelas;
             document.getElementById('res-score').innerText = score;
 
+            // Tampilkan Reward atau Feedback berdasarkan perolehan nilai
+            showRewardOrFeedback(score);
+
+            // Tampilkan Pembahasan Soal
+            renderReview();
+
+            // Kirim data ke Google Sheets
             sendDataToDrive();
         }
 
+        function showRewardOrFeedback(finalScore) {
+            const box = document.getElementById('reward-feedback-box');
+            let htmlContent = "";
+
+            if (finalScore >= 85) {
+                // REWARD UNTUK NILAI BAGUS/TINGGI
+                htmlContent = `
+                    <div class="bg-amber-50 border-2 border-amber-300 p-4 rounded-xl text-center shadow-sm space-y-1">
+                        <span class="text-3xl">🏆</span>
+                        <h4 class="font-bold text-amber-800 text-lg">Luar Biasa! Predikat: Master Spreadsheet</h4>
+                        <p class="text-xs text-amber-700">Kamu mendapatkan reward bintang emas karena pemahaman rumus analisis datamu sangat luar biasa!</p>
+                    </div>
+                `;
+            } else if (finalScore >= 70) {
+                // FEEDBACK BAIK
+                htmlContent = `
+                    <div class="bg-blue-50 border-2 border-blue-200 p-4 rounded-xl text-center shadow-sm space-y-1">
+                        <span class="text-3xl">🌟</span>
+                    <h4 class="font-bold text-blue-800 text-lg">Kerja Bagus!</h4>
+                        <p class="text-xs text-blue-700">Hasilmu sudah baik. Tingkatkan sedikit lagi ketelitian dalam penulisan sintaks rumus agar sempurna!</p>
+                    </div>
+                `;
+            } else {
+                // FEEDBACK MOTIVASI UNTUK NILAI KURANG
+                htmlContent = `
+                    <div class="bg-rose-50 border-2 border-rose-200 p-4 rounded-xl text-center shadow-sm space-y-1">
+                        <span class="text-3xl">💪</span>
+                        <h4 class="font-bold text-rose-800 text-lg">Tetap Semangat & Belajar Lagi!</h4>
+                        <p class="text-xs text-rose-700">Nilaimu masih kurang. Yuk, pelajari kembali materi rumus SUM, AVERAGE, IF, dan COUNTIF pada bab Analisis Data!</p>
+                    </div>
+                `;
+            }
+
+            box.innerHTML = htmlContent;
+        }
+
+        function renderReview() {
+            const container = document.getElementById('review-container');
+            container.innerHTML = "";
+
+            detailAnswers.forEach((item, idx) => {
+                const isCorrect = item.status === "BENAR";
+                const borderClass = isCorrect ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50";
+                const statusBadge = isCorrect 
+                    ? `<span class="bg-green-200 text-green-800 text-xs px-2 py-1 rounded font-semibold">✓ BENAR</span>`
+                    : `<span class="bg-red-200 text-red-800 text-xs px-2 py-1 rounded font-semibold">✕ SALAH</span>`;
+
+                const html = `
+                    <div class="p-4 border-l-4 rounded-r-lg ${borderClass} shadow-sm space-y-1 text-sm">
+                        <div class="flex justify-between items-start gap-2">
+                            <p class="font-semibold text-gray-800">${idx + 1}. ${item.soal}</p>
+                            ${statusBadge}
+                        </div>
+                        <p class="text-gray-700 font-mono">
+                            <span class="font-sans text-gray-500">Jawaban Kamu:</span> ${item.jawabanSiswa}
+                        </p>
+                        ${!isCorrect ? `
+                            <p class="text-green-700 font-mono">
+                                <span class="font-sans text-gray-500">Kunci Jawaban:</span> ${item.kunciJawaban}
+                            </p>
+                        ` : ''}
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
         function sendDataToDrive() {
-            // Pengecekan hanya jika URL belum diisi atau masih berupa placeholder bawaan
             if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("MASUKKAN_URL")) {
                 document.getElementById('sync-status').innerText = "Catatan: URL Google Apps Script belum diatur oleh guru.";
                 return;
@@ -249,7 +339,6 @@
                 detail: detailAnswers
             };
 
-            // Mengirim data menggunakan text/plain agar tidak terkena hambatan CORS Google Apps Script
             fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors",
@@ -257,10 +346,10 @@
                 body: JSON.stringify(payload)
             }).then(() => {
                 document.getElementById('sync-status').innerText = "Status: Nilai berhasil terkirim ke Google Drive Guru secara otomatis!";
-                document.getElementById('sync-status').className = "text-xs text-green-600 font-semibold";
+                document.getElementById('sync-status').className = "text-xs text-center text-green-600 font-semibold";
             }).catch(error => {
                 document.getElementById('sync-status').innerText = "Status: Gagal mengirim otomatis, hubungi guru.";
-                document.getElementById('sync-status').className = "text-xs text-red-600 font-semibold";
+                document.getElementById('sync-status').className = "text-xs text-center text-red-600 font-semibold";
             });
         }
     </script>
