@@ -50,7 +50,7 @@
                 <span id="question-progress">Soal 1 dari 20</span>
                 <div class="flex items-center gap-1 bg-red-100 text-red-600 px-3 py-1 rounded-full">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span id="timer" class="font-bold">30</span>s
+                    <span id="timer" class="font-bold">35</span>s
                 </div>
             </div>
 
@@ -134,7 +134,7 @@
         let currentIndex = 0;
         let score = 0;
         let timer;
-        let timeLeft = 30;
+        let timeLeft = 35;
         let studentData = {};
         let detailAnswers = [];
 
@@ -168,7 +168,7 @@
             }
 
             clearInterval(timer);
-            timeLeft = 30;
+            timeLeft = 35;
             document.getElementById('timer').innerText = timeLeft;
             
             const currentQ = questions[currentIndex];
