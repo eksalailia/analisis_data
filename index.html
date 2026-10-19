@@ -103,10 +103,10 @@
     </div>
 
     <script>
-        // URL Google Apps Script Web App (Ganti dengan URL yang Anda dapatkan setelah deployment)
+        // URL Google Apps Script Web App
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJdqI_bRwwAmONsHmYs0Cp1n0_y9vca0wpP7FhGrUe35PJBJPKbxDp5gUTbQGZJtYVDQ/exec";
 
-        // Bank Soal (20 Soal Analisis Data Kelas 7: SUM, AVERAGE, COUNT, MIN, MAX, IF, COUNTIF, SUMIF)
+        // Bank Soal (20 Soal Analisis Data Kelas 7)
         const rawQuestions = [
             { q: "Tuliskan rumus untuk menjumlahkan data angka dari sel A1 sampai A10.", keys: ["=SUM(A1:A10)", "=sum(a1:a10)"] },
             { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel B1 sampai B20.", keys: ["=AVERAGE(B1:B20)", "=average(b1:b20)"] },
@@ -138,7 +138,6 @@
         let studentData = {};
         let detailAnswers = [];
 
-        // Acak array soal
         function shuffleArray(array) {
             return array.sort(() => Math.random() - 0.5);
         }
@@ -168,7 +167,6 @@
                 return;
             }
 
-            // Reset timer & UI
             clearInterval(timer);
             timeLeft = 30;
             document.getElementById('timer').innerText = timeLeft;
@@ -185,33 +183,28 @@
             inputField.className = "w-full px-4 py-3 border-2 border-gray-300 rounded-lg font-mono text-lg focus:outline-none transition-all";
             document.getElementById('feedback-icon').classList.add('hidden');
 
-            // Jalankan Timer 30 Detik
             timer = setInterval(() => {
                 timeLeft--;
                 document.getElementById('timer').innerText = timeLeft;
                 if (timeLeft <= 0) {
                     clearInterval(timer);
-                    submitAnswer(true); // Auto submit jika waktu habis
+                    submitAnswer(true);
                 }
             }, 1000);
         }
 
-        // Live Validation Feedback (Merah / Hijau) saat dikirim
         function submitAnswer(isTimeout = false) {
             clearInterval(timer);
             const inputField = document.getElementById('user-answer');
             const userAnswer = inputField.value.trim();
             const currentQ = questions[currentIndex];
 
-            // Cek apakah jawaban cocok dengan salah satu kunci yang valid
-            // Mengabaikan spasi berlebih untuk toleransi
             const cleanUserAns = userAnswer.replace(/\s+/g, '').toLowerCase();
             const isCorrect = currentQ.keys.some(key => key.replace(/\s+/g, '').toLowerCase() === cleanUserAns);
 
-            // Tanda Merah / Hijau
             if (isCorrect && !isTimeout && userAnswer !== "") {
                 inputField.classList.add('border-green-500', 'bg-green-50');
-                score += 5; // Total 20 soal x 5 = 100
+                score += 5;
             } else {
                 inputField.classList.add('border-red-500', 'bg-red-50');
             }
@@ -224,7 +217,6 @@
 
             currentIndex++;
 
-            // Jeda sejenak agar siswa melihat tanda hijau/merahnya sebelum pindah soal
             setTimeout(() => {
                 loadQuestion();
             }, 1200);
@@ -239,11 +231,16 @@
             document.getElementById('res-kelas').innerText = studentData.kelas;
             document.getElementById('res-score').innerText = score;
 
-            // Kirim data ke Google Sheets/Drive Guru secara otomatis
             sendDataToDrive();
         }
 
         function sendDataToDrive() {
+            // Pengecekan hanya jika URL belum diisi atau masih berupa placeholder bawaan
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("MASUKKAN_URL")) {
+                document.getElementById('sync-status').innerText = "Catatan: URL Google Apps Script belum diatur oleh guru.";
+                return;
+            }
+
             const payload = {
                 nama: studentData.nama,
                 absen: studentData.absen,
@@ -252,15 +249,11 @@
                 detail: detailAnswers
             };
 
-            if (GOOGLE_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbyJdqI_bRwwAmONsHmYs0Cp1n0_y9vca0wpP7FhGrUe35PJBJPKbxDp5gUTbQGZJtYVDQ/exec") {
-                document.getElementById('sync-status').innerText = "Catatan: URL Google Apps Script belum diatur oleh guru.";
-                return;
-            }
-
+            // Mengirim data menggunakan text/plain agar tidak terkena hambatan CORS Google Apps Script
             fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify(payload)
             }).then(() => {
                 document.getElementById('sync-status').innerText = "Status: Nilai berhasil terkirim ke Google Drive Guru secara otomatis!";
