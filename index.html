@@ -118,6 +118,10 @@
 
     </div>
 
+    <!-- Hidden Form & Iframe untuk Menjamin Hanya 1x Pengiriman Tanpa Retry -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+    <form id="google-form" target="hidden_iframe" method="POST" style="display:none;"></form>
+
     <script>
         // URL Google Apps Script Web App
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJdqI_bRwwAmONsHmYs0Cp1n0_y9vca0wpP7FhGrUe35PJBJPKbxDp5gUTbQGZJtYVDQ/exec";
@@ -132,4 +136,236 @@
             { q: "Tuliskan rumus kondisi: Jika sel A1 lebih besar dari 75, maka bernilai 'Lulus', selain itu 'Remidi'.", keys: ["=IF(A1>75,\"Lulus\",\"Remidi\")", '=if(a1>75,"lulus","remidi")', "=IF(A1>75,'Lulus','Remidi')", '=if(a1>75,"Lulus","Remidi")'] },
             { q: "Tuliskan rumus untuk menghitung jumlah sel yang bernilai > 75 pada rentang F1 sampai F10.", keys: ["=COUNTIF(F1:F10,\">75\")", '=countif(f1:f10,">75")'] },
             { q: "Tuliskan rumus untuk menjumlahkan data di rentang B1:B10 jika kriterianya adalah 'Lulus' pada rentang C1:C10.", keys: ["=SUMIF(C1:C10,\"Lulus\",B1:B10)", '=sumif(c1:c10,"lulus",b1:b10)', '=sumif(c1:c10,"Lulus",b1:b10)'] },
-            { q: "Tuliskan rumus untuk menjumlahkan nilai pada sel A1, A2, dan A3 secara langsung.", keys: ["=SUM(A1:A3)", "=sum(a1:a3)", "=A1+A2+
+            { q: "Tuliskan rumus untuk menjumlahkan nilai pada sel A1, A2, dan A3 secara langsung.", keys: ["=SUM(A1:A3)", "=sum(a1:a3)", "=A1+A2+A3", "=a1+a2+a3"] },
+            { q: "Tuliskan rumus untuk mencari rata-rata dari data di rentang K1 sampai K50.", keys: ["=AVERAGE(K1:K50)", "=average(k1:k50)"] },
+            { q: "Tuliskan rumus untuk menghitung jumlah sel yang berisi teks 'Hadir' pada rentang D1:D20.", keys: ["=COUNTIF(D1:D20,\"Hadir\")", '=countif(d1:d20,"hadir")', '=countif(d1:d20,"Hadir")'] },
+            { q: "Tuliskan rumus untuk menjumlahkan nilai pada rentang H1:H15 khusus yang bernilai di atas 50.", keys: ["=SUMIF(H1:H15,\">50\")", '=sumif(h1:h15,">50")'] },
+            { q: "Tuliskan rumus untuk menguji apakah nilai sel E5 sama dengan 100, jika ya tampilkan 'Sempurna', jika tidak 'Belum'.", keys: ["=IF(E5=100,\"Sempurna\",\"Belum\")", '=if(e5=100,"sempurna","belum")', '=if(e5=100,"Sempurna","Belum")'] },
+            { q: "Tuliskan rumus untuk mengetahui nilai terendah dari rentang data G1 hingga G30.", keys: ["=MIN(G1:G30)", "=min(g1:g30)"] },
+            { q: "Tuliskan rumus untuk mengetahui nilai tertinggi dari rentang data L1 hingga L20.", keys: ["=MAX(L1:L20)", "=max(l1:l20)"] },
+            { q: "Tuliskan rumus untuk menghitung total sel yang terisi data dari rentang M1 sampai M40.", keys: ["=COUNTA(M1:M40)", "=counta(m1:m40)", "=COUNT(M1:M40)", "=count(m1:m40)"] },
+            { q: "Tuliskan rumus untuk mencari rata-rata dari sel P1, P2, P3, P4, dan P5.", keys: ["=AVERAGE(P1:P5)", "=average(p1:p5)"] },
+            { q: "Tuliskan rumus kondisi: Jika sel B2 kurang dari 60 maka 'Gagal', jika tidak 'Lulus'.", keys: ["=IF(B2<60,\"Gagal\",\"Lulus\")", '=if(b2<60,"gagal","lulus")', '=if(b2<60,"Gagal","Lulus")'] },
+            { q: "Tuliskan rumus untuk menghitung berapa banyak sel di rentang N1:N10 yang bernilai 'A'.", keys: ["=COUNTIF(N1:N10,\"A\")", '=countif(n1:n10,"a")', '=countif(n1:n10,"A")'] },
+            { q: "Tuliskan rumus untuk menjumlahkan data di kolom Q1:Q20 khusus untuk kategori 'Buah' yang ada di kolom R1:R20.", keys: ["=SUMIF(R1:R20,\"Buah\",Q1:Q20)", '=sumif(r1:r20,"buah",q1:q20)', '=sumif(r1:r20,"Buah",q1:q20)'] }
+        ];
+
+        let questions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 35;
+        let studentData = {};
+        let detailAnswers = [];
+        let isSubmitted = false;
+
+        function shuffleArray(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function startQuiz() {
+            const nama = document.getElementById('nama').value.trim();
+            const absen = document.getElementById('absen').value.trim();
+            const kelas = document.getElementById('kelas').value.trim();
+
+            if (!nama || !absen || !kelas) {
+                alert("Harap lengkapi semua kolom identitas terlebih dahulu!");
+                return;
+            }
+
+            studentData = { nama, absen, kelas };
+            questions = shuffleArray([...rawQuestions]);
+
+            document.getElementById('identity-section').classList.add('hidden');
+            document.getElementById('quiz-section').classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentIndex >= questions.length) {
+                finishQuiz();
+                return;
+            }
+
+            clearInterval(timer);
+            timeLeft = 35;
+            document.getElementById('timer').innerText = timeLeft;
+            
+            const currentQ = questions[currentIndex];
+            document.getElementById('question-progress').innerText = `Soal ${currentIndex + 1} dari ${questions.length}`;
+            document.getElementById('question-text').innerText = currentQ.q;
+            
+            const progressPercent = ((currentIndex + 1) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            const inputField = document.getElementById('user-answer');
+            inputField.value = "";
+            inputField.className = "w-full px-4 py-3 border-2 border-gray-300 rounded-lg font-mono text-lg focus:outline-none transition-all";
+
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    submitAnswer(true);
+                }
+            }, 1000);
+        }
+
+        function submitAnswer(isTimeout = false) {
+            clearInterval(timer);
+            
+            const nextBtn = document.getElementById('next-btn');
+            if (nextBtn) nextBtn.disabled = true;
+
+            const inputField = document.getElementById('user-answer');
+            const userAnswer = inputField.value.trim();
+            const currentQ = questions[currentIndex];
+
+            const cleanUserAns = userAnswer.replace(/\s+/g, '').toLowerCase();
+            const isCorrect = currentQ.keys.some(key => key.replace(/\s+/g, '').toLowerCase() === cleanUserAns);
+
+            if (isCorrect && !isTimeout && userAnswer !== "") {
+                inputField.classList.add('border-green-500', 'bg-green-50');
+                score += 5;
+            } else {
+                inputField.classList.add('border-red-500', 'bg-red-50');
+            }
+
+            detailAnswers.push({
+                soal: currentQ.q,
+                jawabanSiswa: userAnswer || "(Tidak dijawab / Waktu habis)",
+                kunciJawaban: currentQ.keys[0],
+                status: isCorrect && !isTimeout && userAnswer !== "" ? "BENAR" : "SALAH"
+            });
+
+            currentIndex++;
+
+            setTimeout(() => {
+                if (nextBtn) nextBtn.disabled = false;
+                loadQuestion();
+            }, 1200);
+        }
+
+        function finishQuiz() {
+            document.getElementById('quiz-section').classList.add('hidden');
+            document.getElementById('result-section').classList.remove('hidden');
+
+            document.getElementById('res-nama').innerText = studentData.nama;
+            document.getElementById('res-absen').innerText = studentData.absen;
+            document.getElementById('res-kelas').innerText = studentData.kelas;
+            document.getElementById('res-score').innerText = score;
+
+            showRewardOrFeedback(score);
+            renderReview();
+            sendDataToDrive();
+        }
+
+        function showRewardOrFeedback(finalScore) {
+            const box = document.getElementById('reward-feedback-box');
+            let htmlContent = "";
+
+            if (finalScore >= 85) {
+                htmlContent = `
+                    <div class="bg-amber-50 border-2 border-amber-300 p-4 rounded-xl text-center shadow-sm space-y-1">
+                        <span class="text-3xl">🏆</span>
+                        <h4 class="font-bold text-amber-800 text-lg">Luar Biasa! Predikat: Master Spreadsheet</h4>
+                        <p class="text-xs text-amber-700">Kamu mendapatkan reward bintang emas karena pemahaman rumus analisis datamu sangat luar biasa!</p>
+                    </div>
+                `;
+            } else if (finalScore >= 70) {
+                htmlContent = `
+                    <div class="bg-blue-50 border-2 border-blue-200 p-4 rounded-xl text-center shadow-sm space-y-1">
+                        <span class="text-3xl">🌟</span>
+                        <h4 class="font-bold text-blue-800 text-lg">Kerja Bagus!</h4>
+                        <p class="text-xs text-blue-700">Hasilmu sudah baik. Tingkatkan sedikit lagi ketelitian dalam penulisan sintaks rumus agar sempurna!</p>
+                    </div>
+                `;
+            } else {
+                htmlContent = `
+                    <div class="bg-rose-50 border-2 border-rose-200 p-4 rounded-xl text-center shadow-sm space-y-1">
+                        <span class="text-3xl">💪</span>
+                        <h4 class="font-bold text-rose-800 text-lg">Tetap Semangat & Belajar Lagi!</h4>
+                        <p class="text-xs text-rose-700">Nilaimu masih kurang. Yuk, pelajari kembali materi rumus SUM, AVERAGE, IF, dan COUNTIF pada bab Analisis Data!</p>
+                    </div>
+                `;
+            }
+
+            box.innerHTML = htmlContent;
+        }
+
+        function renderReview() {
+            const container = document.getElementById('review-container');
+            container.innerHTML = "";
+
+            detailAnswers.forEach((item, idx) => {
+                const isCorrect = item.status === "BENAR";
+                const borderClass = isCorrect ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50";
+                const statusBadge = isCorrect 
+                    ? `<span class="bg-green-200 text-green-800 text-xs px-2 py-1 rounded font-semibold">✓ BENAR</span>`
+                    : `<span class="bg-red-200 text-red-800 text-xs px-2 py-1 rounded font-semibold">✕ SALAH</span>`;
+
+                const html = `
+                    <div class="p-4 border-l-4 rounded-r-lg ${borderClass} shadow-sm space-y-1 text-sm">
+                        <div class="flex justify-between items-start gap-2">
+                            <p class="font-semibold text-gray-800">${idx + 1}. ${item.soal}</p>
+                            ${statusBadge}
+                        </div>
+                        <p class="text-gray-700 font-mono">
+                            <span class="font-sans text-gray-500">Jawaban Kamu:</span> ${item.jawabanSiswa}
+                        </p>
+                        ${!isCorrect ? `
+                            <p class="text-green-700 font-mono">
+                                <span class="font-sans text-gray-500">Kunci Jawaban:</span> ${item.kunciJawaban}
+                            </p>
+                        ` : ''}
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        // Pengiriman menggunakan HTML Form Hidden ke Iframe Tersembunyi (100% Anti Duplicate/Retry)
+        function sendDataToDrive() {
+            if (isSubmitted) return;
+            isSubmitted = true;
+
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyJdqI_bRwwAmONsHmYs0Cp1n0_y9vca0wpP7FhGrUe35PJBJPKbxDp5gUTbQGZJtYVDQ/exec")) {
+                document.getElementById('sync-status').innerText = "Catatan: URL Google Apps Script belum diatur oleh guru.";
+                return;
+            }
+
+            const payload = {
+                nama: studentData.nama,
+                absen: studentData.absen,
+                kelas: studentData.kelas,
+                nilai: score,
+                detail: detailAnswers
+            };
+
+            try {
+                const form = document.getElementById('google-form');
+                form.action = GOOGLE_SCRIPT_URL;
+                form.innerHTML = ''; // bersihkan form
+                
+                // Masukkan payload sebagai input tersembunyi
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'postData';
+                input.value = JSON.stringify(payload);
+                form.appendChild(input);
+
+                // Submit form ke iframe tersembunyi
+                form.submit();
+
+                document.getElementById('sync-status').innerText = "Status: Nilai berhasil terkirim ke Google Drive Guru secara otomatis!";
+                document.getElementById('sync-status').className = "text-xs text-center text-green-600 font-semibold";
+            } catch (err) {
+                document.getElementById('sync-status').innerText = "Status: Gagal mengirim otomatis, hubungi guru.";
+                document.getElementById('sync-status').className = "text-xs text-center text-red-600 font-semibold";
+            }
+        }
+    </script>
+</body>
+</html>
