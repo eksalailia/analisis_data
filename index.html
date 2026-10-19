@@ -32,7 +32,7 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Nomor Absen</label>
-                <input type="number" id="absen" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Contoh: 15">
+                <input type="text" id="absen" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Contoh: 15">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
@@ -331,7 +331,7 @@
             if (isSubmitted) return;
             isSubmitted = true;
 
-            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbyJdqI_bRwwAmONsHmYs0Cp1n0_y9vca0wpP7FhGrUe35PJBJPKbxDp5gUTbQGZJtYVDQ/exec")) {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("MASUKKAN_URL")) {
                 document.getElementById('sync-status').innerText = "Catatan: URL Google Apps Script belum diatur oleh guru.";
                 return;
             }
@@ -347,16 +347,14 @@
             try {
                 const form = document.getElementById('google-form');
                 form.action = GOOGLE_SCRIPT_URL;
-                form.innerHTML = ''; // bersihkan form
+                form.innerHTML = ''; 
                 
-                // Masukkan payload sebagai input tersembunyi
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'postData';
                 input.value = JSON.stringify(payload);
                 form.appendChild(input);
 
-                // Submit form ke iframe tersembunyi
                 form.submit();
 
                 document.getElementById('sync-status').innerText = "Status: Nilai berhasil terkirim ke Google Drive Guru secara otomatis!";
