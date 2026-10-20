@@ -111,7 +111,7 @@
         <!-- 2. SECTION KUIS -->
         <div id="quiz-section" class="hidden">
             <div class="flex justify-between items-center mb-4 text-sm font-medium text-gray-600">
-                <span id="question-progress">Soal 1 dari 26</span>
+                <span id="question-progress">Soal 1 dari 30</span>
                 <div class="flex items-center gap-1 bg-red-100 text-red-600 px-3 py-1 rounded-full">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <span id="timer" class="font-bold">60</span>s
@@ -190,7 +190,7 @@
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJdqI_bRwwAmONsHmYs0Cp1n0_y9vca0wpP7FhGrUe35PJBJPKbxDp5gUTbQGZJtYVDQ/exec";
 
-        // ========== 26 SOAL (25 lama + 1 baru) ==========
+        // ========== 30 SOAL ==========
         const rawQuestions = [
             { q: "Tuliskan rumus untuk menjumlahkan data angka dari sel A2 sampai A12.", keys: ["=SUM(A2:A12)"], hint: "Gunakan SUM dengan range A2:A12" },
             { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel B2 sampai B15.", keys: ["=AVERAGE(B2:B15)"], hint: "Gunakan AVERAGE" },
@@ -207,7 +207,7 @@
             { q: "Tuliskan rumus untuk menguji apakah nilai sel E6 sama dengan 100, jika ya tampilkan 'Sempurna', jika tidak 'Belum'.", keys: ["=IF(E6=100,\"Sempurna\",\"Belum\")"], hint: "Gunakan operator =" },
             { q: "Tuliskan rumus untuk mengetahui nilai terendah dari rentang data G2 hingga G35.", keys: ["=MIN(G2:G35)"], hint: "MIN" },
             { q: "Tuliskan rumus untuk mengetahui nilai tertinggi dari rentang data L2 hingga L25.", keys: ["=MAX(L2:L25)"], hint: "MAX" },
-            { q: "Tuliskan rumus untuk menghitung total sel yang terisi data (tidak kosong) dari rentang M2 sampai M50.", keys: ["=COUNTA(M2:M50)"], hint: "COUNTA menghitung sel tidak kosong" },
+            { q: "Tuliskan rumus untuk menghitung total sel yang terisi data (bukan angka) dari rentang M2 sampai M50.", keys: ["=COUNTA(M2:M50)"], hint: "COUNTA menghitung sel tidak kosong" },
             { q: "Tuliskan rumus untuk mencari rata-rata dari sel P2, P3, P4, P5, dan P6.", keys: ["=AVERAGE(P2:P6)"], hint: "AVERAGE" },
             { q: "Tuliskan rumus kondisi: Jika sel B3 kurang dari 65 maka 'Gagal', jika tidak 'Lulus'.", keys: ["=IF(B3<65,\"Gagal\",\"Lulus\")"], hint: "Gunakan operator <" },
             { q: "Tuliskan rumus untuk menghitung berapa banyak sel di rentang N2:N15 yang bernilai 'B'.", keys: ["=COUNTIF(N2:N15,\"B\")"], hint: "COUNTIF dengan kriteria teks" },
@@ -217,8 +217,12 @@
             { q: "Tuliskan rumus IF: jika sel U2 lebih kecil atau sama dengan 50, tampilkan 'Kurang', jika tidak 'Baik'.", keys: ["=IF(U2<=50,\"Kurang\",\"Baik\")"], hint: "Gunakan operator <=" },
             { q: "Tuliskan rumus untuk menjumlahkan nilai di V2 sampai V15, HANYA jika nilai di W2 sampai W15 sama dengan 'Aktif'.", keys: ["=SUMIF(W2:W15,\"Aktif\",V2:V15)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" },
             { q: "Tuliskan rumus untuk mencari nilai terbesar dari sel X2 sampai X40.", keys: ["=MAX(X2:X40)"], hint: "MAX" },
-            // Soal baru (ke-26): kombinasi COUNTIF dengan operator >=
-            { q: "Tuliskan rumus untuk menghitung jumlah sel pada rentang Y2:Y30 yang nilainya lebih dari atau sama dengan 75.", keys: ["=COUNTIF(Y2:Y30,\">=75\")"], hint: "COUNTIF dengan kriteria \">=75\"" }
+            { q: "Tuliskan rumus untuk menghitung jumlah sel pada rentang Y2:Y30 yang nilainya lebih dari atau sama dengan 75.", keys: ["=COUNTIF(Y2:Y30,\">=75\")"], hint: "COUNTIF dengan kriteria \">=75\"" },
+            // ===== 4 SOAL BARU =====
+            { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel Z2 sampai Z20.", keys: ["=AVERAGE(Z2:Z20)"], hint: "AVERAGE" },
+            { q: "Tuliskan rumus untuk menghitung jumlah sel pada rentang AA2:AA25 yang nilainya kurang dari 60.", keys: ["=COUNTIF(AA2:AA25,\"<60\")"], hint: "COUNTIF dengan kriteria \"<60\"" },
+            { q: "Tuliskan rumus untuk menghitung jumlah sel pada rentang AE2:AE20 yang nilainya sama dengan 100.", keys: ["=COUNTIF(AE2:AE20,100)"], hint: "COUNTIF dengan kriteria angka 100" },
+            { q: "Tuliskan rumus untuk menjumlahkan nilai di AC2:AC20, HANYA jika nilai di AD2:AD20 lebih besar dari 50.", keys: ["=SUMIF(AD2:AD20,\">50\",AC2:AC20)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" }
         ];
 
         let questions = [];
@@ -351,8 +355,7 @@
 
             if (isCorrect) {
                 inputField.classList.add('border-green-500', 'bg-green-50');
-                // Nilai menyesuaikan jumlah soal (26 soal -> tiap soal ~3.85). Pakai 4 agar mudah, maksimal bisa >100? 
-                // Kita pakai pembulatan: 100/26 ≈ 3.85 -> gunakan 3.85 dan bulatkan skor akhir.
+                // Nilai menyesuaikan jumlah soal (30 soal -> tiap soal ~3.33)
                 score += (100 / rawQuestions.length);
                 fb.className = "mt-3 p-3 rounded-lg text-center font-bold text-sm quick-feedback-correct";
                 fb.innerHTML = "✅ <b>BENAR!</b> Jawabanmu tepat.";
