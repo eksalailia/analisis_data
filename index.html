@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kuis Interaktif Analisis Data - Kelas 7</title>
-    <!-- Tailwind CSS untuk Desain Modern -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -14,7 +13,7 @@
 <body class="bg-gradient-to-br from-blue-600 to-indigo-900 min-h-screen flex items-center justify-center p-4">
 
     <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden p-6 md:p-8 my-6">
-        
+
         <!-- HEADER -->
         <div class="text-center mb-6">
             <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Kuis Analisis Data</h1>
@@ -25,6 +24,16 @@
         <div id="identity-section" class="space-y-4">
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 text-blue-700 text-sm mb-4">
                 Silakan isi identitas dengan benar sebelum memulai kuis. Soal akan diacak dan memiliki batas waktu 35 detik per soal tanpa tombol kembali.
+            </div>
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 text-amber-800 text-xs space-y-1">
+                <p class="font-bold">⚠️ Aturan Penulisan (WAJIB):</p>
+                <ul class="list-disc ml-4 space-y-0.5">
+                    <li>Tanda <b>=</b> di depan <b>wajib ada</b></li>
+                    <li>Pemisah argumen pakai <b>koma (,)</b> — titik koma (;) atau titik (.) <b>salah</b></li>
+                    <li>Teks pakai <b>kutip ganda (")</b> — kutip tunggal (') <b>salah</b></li>
+                    <li><b>Tidak boleh ada spasi</b> di mana pun</li>
+                    <li>Huruf besar/kecil bebas (SUM = sum = Sum)</li>
+                </ul>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
@@ -45,43 +54,37 @@
 
         <!-- 2. SECTION KUIS -->
         <div id="quiz-section" class="hidden">
-            <!-- Progress & Timer -->
             <div class="flex justify-between items-center mb-4 text-sm font-medium text-gray-600">
-                <span id="question-progress">Soal 1 dari 20</span>
+                <span id="question-progress">Soal 1 dari 25</span>
                 <div class="flex items-center gap-1 bg-red-100 text-red-600 px-3 py-1 rounded-full">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <span id="timer" class="font-bold">35</span>s
                 </div>
             </div>
 
-            <!-- Progress Bar -->
             <div class="w-full bg-gray-200 h-2 rounded-full mb-6 overflow-hidden">
-                <div id="progress-bar" class="bg-blue-600 h-full transition-all duration-300" style="width: 5%"></div>
+                <div id="progress-bar" class="bg-blue-600 h-full transition-all duration-300" style="width: 4%"></div>
             </div>
 
-            <!-- Soal -->
             <div class="mb-6">
                 <h2 id="question-text" class="text-lg font-semibold text-gray-800 mb-3"></h2>
                 <div class="bg-gray-50 border p-3 rounded-lg text-xs md:text-sm text-gray-600 font-mono mb-4" id="question-hint">
                     Petunjuk: Gunakan huruf kapital/kecil bebas, contoh: =SUM(A1:A5)
                 </div>
-                
-                <!-- Input Rumus Live -->
+
                 <div class="relative">
-                    <input type="text" id="user-answer" autocomplete="off" spellcheck="false" 
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg font-mono text-lg focus:outline-none transition-all" 
+                    <input type="text" id="user-answer" autocomplete="off" spellcheck="false"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg font-mono text-lg focus:outline-none transition-all"
                         placeholder="Ketik rumus di sini (misal: =SUM(A1:A10))">
-                    <div id="feedback-icon" class="absolute right-4 top-3.5 text-xl hidden"></div>
                 </div>
             </div>
 
-            <!-- Tombol Lanjut -->
             <button onclick="submitAnswer()" id="next-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md">
                 Kirim & Lanjut
             </button>
         </div>
 
-        <!-- 3. SECTION HASIL, REWARD, FEEDBACK & PEMBAHASAN -->
+        <!-- 3. SECTION HASIL -->
         <div id="result-section" class="hidden space-y-6">
             <div class="text-center space-y-2">
                 <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-4xl shadow-inner">
@@ -90,8 +93,7 @@
                 <h2 class="text-2xl font-bold text-gray-800">Kuis Selesai!</h2>
                 <p class="text-gray-600">Terima kasih telah mengerjakan kuis analisis data.</p>
             </div>
-            
-            <!-- Ringkasan Identitas & Nilai -->
+
             <div class="bg-gray-50 p-6 rounded-xl border max-w-md mx-auto space-y-2 text-left shadow-sm">
                 <p><strong>Nama:</strong> <span id="res-nama">-</span></p>
                 <p><strong>Absen:</strong> <span id="res-absen">-</span></p>
@@ -100,25 +102,20 @@
                 <p class="text-xl font-bold text-center text-blue-600">Nilai Akhir: <span id="res-score">0</span></p>
             </div>
 
-            <!-- CONTAINER REWARD ATAU FEEDBACK BERDASARKAN NILAI -->
             <div id="reward-feedback-box" class="max-w-md mx-auto"></div>
 
             <div id="sync-status" class="text-xs text-center text-gray-500 italic">Mengirim data ke sistem guru...</div>
 
-            <!-- Pembahasan Soal -->
             <div class="mt-8 border-t pt-6">
                 <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                     📋 Pembahasan Soal
                 </h3>
-                <div id="review-container" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-                    <!-- Item pembahasan akan digenerate via JavaScript -->
-                </div>
+                <div id="review-container" class="space-y-4 max-h-[500px] overflow-y-auto pr-2"></div>
             </div>
         </div>
 
     </div>
 
-    <!-- Hidden Form & Iframe untuk Menjamin Hanya 1x Pengiriman Tanpa Retry -->
     <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
     <form id="google-form" target="hidden_iframe" method="POST" style="display:none;"></form>
 
@@ -126,28 +123,35 @@
         // URL Google Apps Script Web App
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJdqI_bRwwAmONsHmYs0Cp1n0_y9vca0wpP7FhGrUe35PJBJPKbxDp5gUTbQGZJtYVDQ/exec";
 
-        // Bank Soal (20 Soal Analisis Data Kelas 7)
+        // ========== BANK SOAL (25 SOAL BERBEDA DARI LATIHAN SEBELUMNYA) ==========
+        // Aturan ketat: koma saja, kutip ganda, "=" wajib, tanpa spasi, huruf bebas
         const rawQuestions = [
-            { q: "Tuliskan rumus untuk menjumlahkan data angka dari sel A1 sampai A10.", keys: ["=SUM(A1:A10)", "=sum(a1:a10)"] },
-            { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel B1 sampai B20.", keys: ["=AVERAGE(B1:B20)", "=average(b1:b20)"] },
-            { q: "Tuliskan rumus untuk menghitung banyaknya sel yang berisi angka dari rentang C1 hingga C15.", keys: ["=COUNT(C1:C15)", "=count(c1:c15)"] },
-            { q: "Tuliskan rumus untuk mencari nilai terkecil (minimum) dari data di sel D1 sampai D10.", keys: ["=MIN(D1:D10)", "=min(d1:d10)"] },
-            { q: "Tuliskan rumus untuk mencari nilai terbesar (maksimum) dari data di sel E1 sampai E25.", keys: ["=MAX(E1:E25)", "=max(e1:e25)"] },
-            { q: "Tuliskan rumus kondisi: Jika sel A1 lebih besar dari 75, maka bernilai 'Lulus', selain itu 'Remidi'.", keys: ["=IF(A1>75,\"Lulus\",\"Remidi\")", '=if(a1>75,"lulus","remidi")', "=IF(A1>75,'Lulus','Remidi')", '=if(a1>75,"Lulus","Remidi")'] },
-            { q: "Tuliskan rumus untuk menghitung jumlah sel yang bernilai > 75 pada rentang F1 sampai F10.", keys: ["=COUNTIF(F1:F10,\">75\")", '=countif(f1:f10,">75")'] },
-            { q: "Tuliskan rumus untuk menjumlahkan data di rentang B1:B10 jika kriterianya adalah 'Lulus' pada rentang C1:C10.", keys: ["=SUMIF(C1:C10,\"Lulus\",B1:B10)", '=sumif(c1:c10,"lulus",b1:b10)', '=sumif(c1:c10,"Lulus",b1:b10)'] },
-            { q: "Tuliskan rumus untuk menjumlahkan nilai pada sel A1, A2, dan A3 secara langsung.", keys: ["=SUM(A1:A3)", "=sum(a1:a3)", "=A1+A2+A3", "=a1+a2+a3"] },
-            { q: "Tuliskan rumus untuk mencari rata-rata dari data di rentang K1 sampai K50.", keys: ["=AVERAGE(K1:K50)", "=average(k1:k50)"] },
-            { q: "Tuliskan rumus untuk menghitung jumlah sel yang berisi teks 'Hadir' pada rentang D1:D20.", keys: ["=COUNTIF(D1:D20,\"Hadir\")", '=countif(d1:d20,"hadir")', '=countif(d1:d20,"Hadir")'] },
-            { q: "Tuliskan rumus untuk menjumlahkan nilai pada rentang H1:H15 khusus yang bernilai di atas 50.", keys: ["=SUMIF(H1:H15,\">50\")", '=sumif(h1:h15,">50")'] },
-            { q: "Tuliskan rumus untuk menguji apakah nilai sel E5 sama dengan 100, jika ya tampilkan 'Sempurna', jika tidak 'Belum'.", keys: ["=IF(E5=100,\"Sempurna\",\"Belum\")", '=if(e5=100,"sempurna","belum")', '=if(e5=100,"Sempurna","Belum")'] },
-            { q: "Tuliskan rumus untuk mengetahui nilai terendah dari rentang data G1 hingga G30.", keys: ["=MIN(G1:G30)", "=min(g1:g30)"] },
-            { q: "Tuliskan rumus untuk mengetahui nilai tertinggi dari rentang data L1 hingga L20.", keys: ["=MAX(L1:L20)", "=max(l1:l20)"] },
-            { q: "Tuliskan rumus untuk menghitung total sel yang terisi data dari rentang M1 sampai M40.", keys: ["=COUNTA(M1:M40)", "=counta(m1:m40)", "=COUNT(M1:M40)", "=count(m1:m40)"] },
-            { q: "Tuliskan rumus untuk mencari rata-rata dari sel P1, P2, P3, P4, dan P5.", keys: ["=AVERAGE(P1:P5)", "=average(p1:p5)"] },
-            { q: "Tuliskan rumus kondisi: Jika sel B2 kurang dari 60 maka 'Gagal', jika tidak 'Lulus'.", keys: ["=IF(B2<60,\"Gagal\",\"Lulus\")", '=if(b2<60,"gagal","lulus")', '=if(b2<60,"Gagal","Lulus")'] },
-            { q: "Tuliskan rumus untuk menghitung berapa banyak sel di rentang N1:N10 yang bernilai 'A'.", keys: ["=COUNTIF(N1:N10,\"A\")", '=countif(n1:n10,"a")', '=countif(n1:n10,"A")'] },
-            { q: "Tuliskan rumus untuk menjumlahkan data di kolom Q1:Q20 khusus untuk kategori 'Buah' yang ada di kolom R1:R20.", keys: ["=SUMIF(R1:R20,\"Buah\",Q1:Q20)", '=sumif(r1:r20,"buah",q1:q20)', '=sumif(r1:r20,"Buah",q1:q20)'] }
+            { q: "Tuliskan rumus untuk menjumlahkan data angka dari sel A2 sampai A12.", keys: ["=SUM(A2:A12)"], hint: "Gunakan SUM dengan range A2:A12" },
+            { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel B2 sampai B15.", keys: ["=AVERAGE(B2:B15)"], hint: "Gunakan AVERAGE" },
+            { q: "Tuliskan rumus untuk menghitung banyaknya sel angka dari rentang C2 hingga C20.", keys: ["=COUNT(C2:C20)"], hint: "Gunakan COUNT" },
+            { q: "Tuliskan rumus untuk mencari nilai terkecil dari data di sel D2 sampai D12.", keys: ["=MIN(D2:D12)"], hint: "Gunakan MIN" },
+            { q: "Tuliskan rumus untuk mencari nilai terbesar dari data di sel E2 sampai E30.", keys: ["=MAX(E2:E30)"], hint: "Gunakan MAX" },
+            { q: "Tuliskan rumus IF: jika sel A2 lebih besar dari 80, maka 'Sangat Baik', selain itu 'Cukup'.", keys: ["=IF(A2>80,\"Sangat Baik\",\"Cukup\")"], hint: "Format: =IF(kondisi,nilai_benar,nilai_salah)" },
+            { q: "Tuliskan rumus untuk menghitung jumlah sel yang bernilai > 80 pada rentang F2 sampai F12.", keys: ["=COUNTIF(F2:F12,\">80\")"], hint: "COUNTIF dengan kriteria \">80\"" },
+            { q: "Tuliskan rumus untuk menjumlahkan data di rentang B2:B12 jika kriterianya 'Lulus' pada rentang C2:C12.", keys: ["=SUMIF(C2:C12,\"Lulus\",B2:B12)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" },
+            { q: "Tuliskan rumus untuk menjumlahkan nilai pada sel A2, A3, dan A4 secara langsung.", keys: ["=SUM(A2,A3,A4)", "=A2+A3+A4"], hint: "SUM dengan koma atau penjumlahan langsung" },
+            { q: "Tuliskan rumus untuk mencari rata-rata dari data di rentang K2 sampai K40.", keys: ["=AVERAGE(K2:K40)"], hint: "AVERAGE" },
+            { q: "Tuliskan rumus untuk menghitung jumlah sel yang berisi teks 'Hadir' pada rentang D2:D25.", keys: ["=COUNTIF(D2:D25,\"Hadir\")"], hint: "COUNTIF dengan kriteria teks" },
+            { q: "Tuliskan rumus untuk menjumlahkan nilai pada rentang H2:H20 khusus yang bernilai di atas 60.", keys: ["=SUMIF(H2:H20,\">60\")", "=SUMIF(H2:H20,\">60\",H2:H20)"], hint: "SUMIF bisa 2 argumen jika range sama" },
+            { q: "Tuliskan rumus untuk menguji apakah nilai sel E6 sama dengan 100, jika ya tampilkan 'Sempurna', jika tidak 'Belum'.", keys: ["=IF(E6=100,\"Sempurna\",\"Belum\")"], hint: "Gunakan operator =" },
+            { q: "Tuliskan rumus untuk mengetahui nilai terendah dari rentang data G2 hingga G35.", keys: ["=MIN(G2:G35)"], hint: "MIN" },
+            { q: "Tuliskan rumus untuk mengetahui nilai tertinggi dari rentang data L2 hingga L25.", keys: ["=MAX(L2:L25)"], hint: "MAX" },
+            { q: "Tuliskan rumus untuk menghitung total sel yang terisi data (tidak kosong) dari rentang M2 sampai M50.", keys: ["=COUNTA(M2:M50)"], hint: "COUNTA menghitung sel tidak kosong" },
+            { q: "Tuliskan rumus untuk mencari rata-rata dari sel P2, P3, P4, P5, dan P6.", keys: ["=AVERAGE(P2:P6)"], hint: "AVERAGE" },
+            { q: "Tuliskan rumus kondisi: Jika sel B3 kurang dari 65 maka 'Gagal', jika tidak 'Lulus'.", keys: ["=IF(B3<65,\"Gagal\",\"Lulus\")"], hint: "Gunakan operator <" },
+            { q: "Tuliskan rumus untuk menghitung berapa banyak sel di rentang N2:N15 yang bernilai 'B'.", keys: ["=COUNTIF(N2:N15,\"B\")"], hint: "COUNTIF dengan kriteria teks" },
+            { q: "Tuliskan rumus untuk menjumlahkan data di kolom Q2:Q25 khusus untuk kategori 'Sayur' yang ada di kolom R2:R25.", keys: ["=SUMIF(R2:R25,\"Sayur\",Q2:Q25)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" },
+            // === 5 SOAL BARU ===
+            { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel S2 sampai S18.", keys: ["=AVERAGE(S2:S18)"], hint: "AVERAGE" },
+            { q: "Tuliskan rumus untuk menghitung berapa banyak sel di T2:T30 yang nilainya lebih dari atau sama dengan 90.", keys: ["=COUNTIF(T2:T30,\">=90\")"], hint: "COUNTIF dengan kriteria \">=90\"" },
+            { q: "Tuliskan rumus IF: jika sel U2 lebih kecil atau sama dengan 50, tampilkan 'Kurang', jika tidak 'Baik'.", keys: ["=IF(U2<=50,\"Kurang\",\"Baik\")"], hint: "Gunakan operator <=" },
+            { q: "Tuliskan rumus untuk menjumlahkan nilai di V2 sampai V15, HANYA jika nilai di W2 sampai W15 sama dengan 'Aktif'.", keys: ["=SUMIF(W2:W15,\"Aktif\",V2:V15)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" },
+            { q: "Tuliskan rumus untuk mencari nilai terbesar dari sel X2 sampai X40.", keys: ["=MAX(X2:X40)"], hint: "MAX" }
         ];
 
         let questions = [];
@@ -158,9 +162,23 @@
         let studentData = {};
         let detailAnswers = [];
         let isSubmitted = false;
+        let isFeedback = false;
 
         function shuffleArray(array) {
             return array.sort(() => Math.random() - 0.5);
+        }
+
+        // ========== NORMALISASI KETAT ==========
+        // Hanya lowercase. Semua pelanggaran (spasi, ;, ., ', tanpa =) = SALAH
+        function normalisasi(str) {
+            if (str === null || str === undefined) return "";
+            return String(str).toLowerCase();
+        }
+
+        function cekJawaban(userInput, keys) {
+            const userNorm = normalisasi(userInput);
+            if (!userNorm) return false;
+            return keys.some(k => normalisasi(k) === userNorm);
         }
 
         function startQuiz() {
@@ -191,17 +209,30 @@
             clearInterval(timer);
             timeLeft = 35;
             document.getElementById('timer').innerText = timeLeft;
-            
+            isFeedback = false;
+
             const currentQ = questions[currentIndex];
             document.getElementById('question-progress').innerText = `Soal ${currentIndex + 1} dari ${questions.length}`;
             document.getElementById('question-text').innerText = currentQ.q;
-            
+            document.getElementById('question-hint').innerText = "💡 Petunjuk: " + currentQ.hint;
+
             const progressPercent = ((currentIndex + 1) / questions.length) * 100;
             document.getElementById('progress-bar').style.width = `${progressPercent}%`;
 
             const inputField = document.getElementById('user-answer');
             inputField.value = "";
+            inputField.disabled = false;
             inputField.className = "w-full px-4 py-3 border-2 border-gray-300 rounded-lg font-mono text-lg focus:outline-none transition-all";
+
+            document.getElementById('next-btn').disabled = false;
+            document.getElementById('next-btn').className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md";
+
+            inputField.onkeydown = (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (!isFeedback) submitAnswer();
+                }
+            };
 
             timer = setInterval(() => {
                 timeLeft--;
@@ -214,8 +245,9 @@
         }
 
         function submitAnswer(isTimeout = false) {
+            if (isFeedback) return;
             clearInterval(timer);
-            
+
             const nextBtn = document.getElementById('next-btn');
             if (nextBtn) nextBtn.disabled = true;
 
@@ -223,12 +255,14 @@
             const userAnswer = inputField.value.trim();
             const currentQ = questions[currentIndex];
 
-            const cleanUserAns = userAnswer.replace(/\s+/g, '').toLowerCase();
-            const isCorrect = currentQ.keys.some(key => key.replace(/\s+/g, '').toLowerCase() === cleanUserAns);
+            const isCorrect = !isTimeout && userAnswer !== "" && cekJawaban(userAnswer, currentQ.keys);
 
-            if (isCorrect && !isTimeout && userAnswer !== "") {
+            // Feedback warna 3 detik
+            isFeedback = true;
+            inputField.disabled = true;
+            if (isCorrect) {
                 inputField.classList.add('border-green-500', 'bg-green-50');
-                score += 5;
+                score += 4; // 25 soal × 4 = 100
             } else {
                 inputField.classList.add('border-red-500', 'bg-red-50');
             }
@@ -237,7 +271,7 @@
                 soal: currentQ.q,
                 jawabanSiswa: userAnswer || "(Tidak dijawab / Waktu habis)",
                 kunciJawaban: currentQ.keys[0],
-                status: isCorrect && !isTimeout && userAnswer !== "" ? "BENAR" : "SALAH"
+                status: isCorrect ? "BENAR" : "SALAH"
             });
 
             currentIndex++;
@@ -245,7 +279,7 @@
             setTimeout(() => {
                 if (nextBtn) nextBtn.disabled = false;
                 loadQuestion();
-            }, 1200);
+            }, 3000); // 3 detik penanda
         }
 
         function finishQuiz() {
@@ -302,7 +336,7 @@
             detailAnswers.forEach((item, idx) => {
                 const isCorrect = item.status === "BENAR";
                 const borderClass = isCorrect ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50";
-                const statusBadge = isCorrect 
+                const statusBadge = isCorrect
                     ? `<span class="bg-green-200 text-green-800 text-xs px-2 py-1 rounded font-semibold">✓ BENAR</span>`
                     : `<span class="bg-red-200 text-red-800 text-xs px-2 py-1 rounded font-semibold">✕ SALAH</span>`;
 
@@ -313,11 +347,11 @@
                             ${statusBadge}
                         </div>
                         <p class="text-gray-700 font-mono">
-                            <span class="font-sans text-gray-500">Jawaban Kamu:</span> ${item.jawabanSiswa}
+                            <span class="font-sans text-gray-500">Jawaban Kamu:</span> ${escapeHtml(item.jawabanSiswa)}
                         </p>
                         ${!isCorrect ? `
                             <p class="text-green-700 font-mono">
-                                <span class="font-sans text-gray-500">Kunci Jawaban:</span> ${item.kunciJawaban}
+                                <span class="font-sans text-gray-500">Kunci Jawaban:</span> ${escapeHtml(item.kunciJawaban)}
                             </p>
                         ` : ''}
                     </div>
@@ -326,7 +360,15 @@
             });
         }
 
-        // Pengiriman menggunakan HTML Form Hidden ke Iframe Tersembunyi (100% Anti Duplicate/Retry)
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         function sendDataToDrive() {
             if (isSubmitted) return;
             isSubmitted = true;
@@ -347,8 +389,8 @@
             try {
                 const form = document.getElementById('google-form');
                 form.action = GOOGLE_SCRIPT_URL;
-                form.innerHTML = ''; 
-                
+                form.innerHTML = '';
+
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'postData';
