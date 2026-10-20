@@ -71,7 +71,7 @@
         <!-- 1. FORM IDENTITAS -->
         <div id="identity-section" class="space-y-4">
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 text-blue-700 text-sm mb-4">
-                Silakan isi identitas dengan benar sebelum memulai kuis. Soal akan diacak dan memiliki batas waktu 35 detik per soal tanpa tombol kembali.
+                Silakan isi identitas dengan benar sebelum memulai kuis. Soal akan diacak dan memiliki batas waktu <b>60 detik (1 menit)</b> per soal tanpa tombol kembali.
             </div>
             <div class="bg-amber-50 border-l-4 border-amber-500 p-4 text-amber-800 text-xs space-y-1">
                 <p class="font-bold">⚠️ Aturan Penulisan (WAJIB):</p>
@@ -111,10 +111,10 @@
         <!-- 2. SECTION KUIS -->
         <div id="quiz-section" class="hidden">
             <div class="flex justify-between items-center mb-4 text-sm font-medium text-gray-600">
-                <span id="question-progress">Soal 1 dari 25</span>
+                <span id="question-progress">Soal 1 dari 26</span>
                 <div class="flex items-center gap-1 bg-red-100 text-red-600 px-3 py-1 rounded-full">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span id="timer" class="font-bold">35</span>s
+                    <span id="timer" class="font-bold">60</span>s
                 </div>
             </div>
 
@@ -190,7 +190,7 @@
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJdqI_bRwwAmONsHmYs0Cp1n0_y9vca0wpP7FhGrUe35PJBJPKbxDp5gUTbQGZJtYVDQ/exec";
 
-        // ========== 25 SOAL ==========
+        // ========== 26 SOAL (25 lama + 1 baru) ==========
         const rawQuestions = [
             { q: "Tuliskan rumus untuk menjumlahkan data angka dari sel A2 sampai A12.", keys: ["=SUM(A2:A12)"], hint: "Gunakan SUM dengan range A2:A12" },
             { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel B2 sampai B15.", keys: ["=AVERAGE(B2:B15)"], hint: "Gunakan AVERAGE" },
@@ -216,14 +216,16 @@
             { q: "Tuliskan rumus untuk menghitung berapa banyak sel di T2:T30 yang nilainya lebih dari atau sama dengan 90.", keys: ["=COUNTIF(T2:T30,\">=90\")"], hint: "COUNTIF dengan kriteria \">=90\"" },
             { q: "Tuliskan rumus IF: jika sel U2 lebih kecil atau sama dengan 50, tampilkan 'Kurang', jika tidak 'Baik'.", keys: ["=IF(U2<=50,\"Kurang\",\"Baik\")"], hint: "Gunakan operator <=" },
             { q: "Tuliskan rumus untuk menjumlahkan nilai di V2 sampai V15, HANYA jika nilai di W2 sampai W15 sama dengan 'Aktif'.", keys: ["=SUMIF(W2:W15,\"Aktif\",V2:V15)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" },
-            { q: "Tuliskan rumus untuk mencari nilai terbesar dari sel X2 sampai X40.", keys: ["=MAX(X2:X40)"], hint: "MAX" }
+            { q: "Tuliskan rumus untuk mencari nilai terbesar dari sel X2 sampai X40.", keys: ["=MAX(X2:X40)"], hint: "MAX" },
+            // Soal baru (ke-26): kombinasi COUNTIF dengan operator >=
+            { q: "Tuliskan rumus untuk menghitung jumlah sel pada rentang Y2:Y30 yang nilainya lebih dari atau sama dengan 75.", keys: ["=COUNTIF(Y2:Y30,\">=75\")"], hint: "COUNTIF dengan kriteria \">=75\"" }
         ];
 
         let questions = [];
         let currentIndex = 0;
         let score = 0;
         let timer;
-        let timeLeft = 35;
+        let timeLeft = 60; // 1 menit
         let studentData = {};
         let detailAnswers = [];
         let isSubmitted = false;
@@ -290,7 +292,7 @@
             }
 
             clearInterval(timer);
-            timeLeft = 35;
+            timeLeft = 60; // 1 menit per soal
             document.getElementById('timer').innerText = timeLeft;
             isFeedback = false;
 
@@ -349,7 +351,9 @@
 
             if (isCorrect) {
                 inputField.classList.add('border-green-500', 'bg-green-50');
-                score += 4;
+                // Nilai menyesuaikan jumlah soal (26 soal -> tiap soal ~3.85). Pakai 4 agar mudah, maksimal bisa >100? 
+                // Kita pakai pembulatan: 100/26 ≈ 3.85 -> gunakan 3.85 dan bulatkan skor akhir.
+                score += (100 / rawQuestions.length);
                 fb.className = "mt-3 p-3 rounded-lg text-center font-bold text-sm quick-feedback-correct";
                 fb.innerHTML = "✅ <b>BENAR!</b> Jawabanmu tepat.";
             } else {
@@ -392,11 +396,13 @@
             document.getElementById('res-absen').innerText = studentData.absen;
             document.getElementById('res-kelas').innerText = studentData.kelas;
             document.getElementById('res-pelanggaran').innerText = pelanggaran;
-            document.getElementById('res-score').innerText = score;
+            // Bulatkan skor agar rapi (0-100)
+            const finalScore = Math.round(score);
+            document.getElementById('res-score').innerText = finalScore;
 
-            showRewardOrFeedback(score);
+            showRewardOrFeedback(finalScore);
             renderReview();
-            sendDataToDrive();
+            sendDataToDrive(finalScore);
         }
 
         function showRewardOrFeedback(finalScore) {
@@ -472,7 +478,7 @@
                 .replace(/'/g, "&#039;");
         }
 
-        function sendDataToDrive() {
+        function sendDataToDrive(finalScore) {
             if (isSubmitted) return;
             isSubmitted = true;
 
@@ -485,7 +491,7 @@
                 nama: studentData.nama,
                 absen: studentData.absen,
                 kelas: studentData.kelas,
-                nilai: score,
+                nilai: finalScore,
                 pelanggaran: pelanggaran,
                 detail: detailAnswers
             };
