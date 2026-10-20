@@ -77,7 +77,7 @@
                 <p class="font-bold">⚠️ Aturan Penulisan (WAJIB):</p>
                 <ul class="list-disc ml-4 space-y-0.5">
                     <li>Tanda <b>=</b> di depan <b>wajib ada</b></li>
-                    <li>Pemisah argumen pakai <b>koma (,)</b> — titik koma (;) atau titik (.) <b>salah</b></li>
+                    <li>Pemisah argumen boleh pakai <b>koma (,)</b> atau <b>titik koma (;)</b> — keduanya diterima</li>
                     <li>Teks pakai <b>kutip ganda (")</b> — kutip tunggal (') <b>salah</b></li>
                     <li><b>Tidak boleh ada spasi</b> di mana pun</li>
                     <li>Huruf besar/kecil bebas (SUM = sum = Sum)</li>
@@ -243,9 +243,12 @@
             return arr;
         }
 
+        // Normalisasi jawaban: huruf kecil + samakan pemisah ; menjadi ,
         function normalisasi(str) {
             if (str === null || str === undefined) return "";
-            return String(str).toLowerCase();
+            return String(str)
+                .toLowerCase()
+                .replace(/;/g, ","); // titik koma dianggap sama dengan koma
         }
 
         function cekJawaban(userInput, keys) {
@@ -357,7 +360,7 @@
                 } else if (userAnswer === "") {
                     fb.innerHTML = "❌ <b>SALAH!</b> Kamu tidak menulis jawaban.";
                 } else {
-                    fb.innerHTML = "❌ <b>SALAH!</b> Perhatikan aturan: pakai <b>koma (,)</b>, <b>kutip ganda (\")</b>, ada <b>=</b>, tanpa spasi.";
+                    fb.innerHTML = "❌ <b>SALAH!</b> Perhatikan aturan: pakai <b>koma (,)</b> atau <b>titik koma (;)</b>, <b>kutip ganda (\")</b>, ada <b>=</b>, tanpa spasi.";
                 }
             }
 
