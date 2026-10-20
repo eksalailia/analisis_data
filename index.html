@@ -231,7 +231,7 @@
             const currentQ = questions[currentIndex];
             document.getElementById('question-progress').innerText = `Soal ${currentIndex + 1} dari ${questions.length}`;
             document.getElementById('question-text').innerText = currentQ.q;
-            document.getElementById('question-hint').innerText = "💡 Petunjuk: " + currentQ.hint;
+            // document.getElementById('question-hint').innerText = "💡 Petunjuk: " + currentQ.hint;
 
             const progressPercent = ((currentIndex + 1) / questions.length) * 100;
             document.getElementById('progress-bar').style.width = `${progressPercent}%`;
