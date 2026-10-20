@@ -25,19 +25,50 @@
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
         }
+
+        #tab-warning-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(220, 38, 38, 0.97);
+            z-index: 9999;
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        #tab-warning-overlay.show {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: popIn 0.3s;
+        }
+        #tab-warning-overlay h2 { font-size: 2rem; margin-bottom: 16px; }
+        #tab-warning-overlay p { font-size: 1rem; margin: 6px 0; }
+        #tab-warning-overlay .warn-count { font-size: 3rem; font-weight: 700; margin: 16px 0; }
+        #tab-warning-overlay button {
+            margin-top: 24px;
+            background: white;
+            color: #dc2626;
+            font-weight: 700;
+            padding: 12px 32px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-600 to-indigo-900 min-h-screen flex items-center justify-center p-4">
 
     <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden p-6 md:p-8 my-6">
 
-        <!-- HEADER -->
         <div class="text-center mb-6">
             <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Kuis Analisis Data</h1>
             <p class="text-sm text-gray-500 mt-1">Mata Pelajaran Informatika Kelas 7 (Rumus Spreadsheet)</p>
         </div>
 
-        <!-- 1. FORM IDENTITAS SISWA -->
+        <!-- 1. FORM IDENTITAS -->
         <div id="identity-section" class="space-y-4">
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 text-blue-700 text-sm mb-4">
                 Silakan isi identitas dengan benar sebelum memulai kuis. Soal akan diacak dan memiliki batas waktu 35 detik per soal tanpa tombol kembali.
@@ -50,6 +81,14 @@
                     <li>Teks pakai <b>kutip ganda (")</b> — kutip tunggal (') <b>salah</b></li>
                     <li><b>Tidak boleh ada spasi</b> di mana pun</li>
                     <li>Huruf besar/kecil bebas (SUM = sum = Sum)</li>
+                </ul>
+            </div>
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 text-red-800 text-xs space-y-1">
+                <p class="font-bold">🚫 ANTI-CURANG AKTIF:</p>
+                <ul class="list-disc ml-4 space-y-0.5">
+                    <li>Jangan pindah tab / minimize saat kuis berlangsung</li>
+                    <li>Klik kanan, Ctrl+C, Ctrl+V, F12 diblokir</li>
+                    <li>Pelanggaran 3x = kuis otomatis berakhir</li>
                 </ul>
             </div>
             <div>
@@ -116,6 +155,7 @@
                 <p><strong>Nama:</strong> <span id="res-nama">-</span></p>
                 <p><strong>Absen:</strong> <span id="res-absen">-</span></p>
                 <p><strong>Kelas:</strong> <span id="res-kelas">-</span></p>
+                <p><strong>Pelanggaran:</strong> <span id="res-pelanggaran">0</span> kali</p>
                 <hr class="my-2">
                 <p class="text-xl font-bold text-center text-blue-600">Nilai Akhir: <span id="res-score">0</span></p>
             </div>
@@ -134,14 +174,23 @@
 
     </div>
 
+    <!-- Overlay peringatan pindah tab -->
+    <div id="tab-warning-overlay">
+        <h2>⚠️ JANGAN PINDAH TAB!</h2>
+        <p>Kamu terdeteksi meninggalkan halaman kuis.</p>
+        <p>Pelanggaran ini dicatat dan dilaporkan ke guru.</p>
+        <div class="warn-count">Pelanggaran: <span id="warn-count">0</span>/3</div>
+        <p id="warn-msg"></p>
+        <button onclick="kembaliKeKuis()">Kembali ke Kuis</button>
+    </div>
+
     <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
     <form id="google-form" target="hidden_iframe" method="POST" style="display:none;"></form>
 
     <script>
-        // URL Google Apps Script Web App
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJdqI_bRwwAmONsHmYs0Cp1n0_y9vca0wpP7FhGrUe35PJBJPKbxDp5gUTbQGZJtYVDQ/exec";
 
-        // ========== BANK SOAL (25 SOAL BERBEDA DARI LATIHAN SEBELUMNYA) ==========
+        // ========== 25 SOAL ==========
         const rawQuestions = [
             { q: "Tuliskan rumus untuk menjumlahkan data angka dari sel A2 sampai A12.", keys: ["=SUM(A2:A12)"], hint: "Gunakan SUM dengan range A2:A12" },
             { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel B2 sampai B15.", keys: ["=AVERAGE(B2:B15)"], hint: "Gunakan AVERAGE" },
@@ -163,7 +212,6 @@
             { q: "Tuliskan rumus kondisi: Jika sel B3 kurang dari 65 maka 'Gagal', jika tidak 'Lulus'.", keys: ["=IF(B3<65,\"Gagal\",\"Lulus\")"], hint: "Gunakan operator <" },
             { q: "Tuliskan rumus untuk menghitung berapa banyak sel di rentang N2:N15 yang bernilai 'B'.", keys: ["=COUNTIF(N2:N15,\"B\")"], hint: "COUNTIF dengan kriteria teks" },
             { q: "Tuliskan rumus untuk menjumlahkan data di kolom Q2:Q25 khusus untuk kategori 'Sayur' yang ada di kolom R2:R25.", keys: ["=SUMIF(R2:R25,\"Sayur\",Q2:Q25)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" },
-            // === 5 SOAL BARU ===
             { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel S2 sampai S18.", keys: ["=AVERAGE(S2:S18)"], hint: "AVERAGE" },
             { q: "Tuliskan rumus untuk menghitung berapa banyak sel di T2:T30 yang nilainya lebih dari atau sama dengan 90.", keys: ["=COUNTIF(T2:T30,\">=90\")"], hint: "COUNTIF dengan kriteria \">=90\"" },
             { q: "Tuliskan rumus IF: jika sel U2 lebih kecil atau sama dengan 50, tampilkan 'Kurang', jika tidak 'Baik'.", keys: ["=IF(U2<=50,\"Kurang\",\"Baik\")"], hint: "Gunakan operator <=" },
@@ -181,12 +229,20 @@
         let isSubmitted = false;
         let isFeedback = false;
 
+        // Anti-curang
+        let pelanggaran = 0;
+        const MAKS_PELANGGARAN = 3;
+        let kuisAktif = false;
+
         function shuffleArray(array) {
-            return array.sort(() => Math.random() - 0.5);
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
         }
 
-        // ========== NORMALISASI KETAT ==========
-        // Hanya lowercase. Semua pelanggaran (spasi, ;, ., ', tanpa =) = SALAH
         function normalisasi(str) {
             if (str === null || str === undefined) return "";
             return String(str).toLowerCase();
@@ -209,10 +265,17 @@
             }
 
             studentData = { nama, absen, kelas };
-            questions = shuffleArray([...rawQuestions]);
+            questions = shuffleArray(rawQuestions);
+            pelanggaran = 0;
+            kuisAktif = true;
 
             document.getElementById('identity-section').classList.add('hidden');
             document.getElementById('quiz-section').classList.remove('hidden');
+
+            // Coba fullscreen
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
 
             loadQuestion();
         }
@@ -231,7 +294,6 @@
             const currentQ = questions[currentIndex];
             document.getElementById('question-progress').innerText = `Soal ${currentIndex + 1} dari ${questions.length}`;
             document.getElementById('question-text').innerText = currentQ.q;
-            // document.getElementById('question-hint').innerText = "💡 Petunjuk: " + currentQ.hint;
 
             const progressPercent = ((currentIndex + 1) / questions.length) * 100;
             document.getElementById('progress-bar').style.width = `${progressPercent}%`;
@@ -241,7 +303,6 @@
             inputField.disabled = false;
             inputField.className = "w-full px-4 py-3 border-2 border-gray-300 rounded-lg font-mono text-lg focus:outline-none transition-all";
 
-            // reset feedback
             const fbReset = document.getElementById('quick-feedback');
             fbReset.className = "hidden mt-3 p-3 rounded-lg text-center font-bold text-sm";
             fbReset.innerHTML = "";
@@ -279,14 +340,13 @@
 
             const isCorrect = !isTimeout && userAnswer !== "" && cekJawaban(userAnswer, currentQ.keys);
 
-            // Feedback warna + tulisan
             isFeedback = true;
             inputField.disabled = true;
             const fb = document.getElementById('quick-feedback');
 
             if (isCorrect) {
                 inputField.classList.add('border-green-500', 'bg-green-50');
-                score += 4; // 25 soal × 4 = 100
+                score += 4;
                 fb.className = "mt-3 p-3 rounded-lg text-center font-bold text-sm quick-feedback-correct";
                 fb.innerHTML = "✅ <b>BENAR!</b> Jawabanmu tepat.";
             } else {
@@ -310,7 +370,6 @@
 
             currentIndex++;
 
-            // 3 detik penanda
             setTimeout(() => {
                 if (nextBtn) nextBtn.disabled = false;
                 loadQuestion();
@@ -318,12 +377,18 @@
         }
 
         function finishQuiz() {
+            kuisAktif = false;
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => {});
+            }
+
             document.getElementById('quiz-section').classList.add('hidden');
             document.getElementById('result-section').classList.remove('hidden');
 
             document.getElementById('res-nama').innerText = studentData.nama;
             document.getElementById('res-absen').innerText = studentData.absen;
             document.getElementById('res-kelas').innerText = studentData.kelas;
+            document.getElementById('res-pelanggaran').innerText = pelanggaran;
             document.getElementById('res-score').innerText = score;
 
             showRewardOrFeedback(score);
@@ -418,6 +483,7 @@
                 absen: studentData.absen,
                 kelas: studentData.kelas,
                 nilai: score,
+                pelanggaran: pelanggaran,
                 detail: detailAnswers
             };
 
@@ -441,6 +507,70 @@
                 document.getElementById('sync-status').className = "text-xs text-center text-red-600 font-semibold";
             }
         }
+
+        // ========== ANTI-CURANG ==========
+        document.addEventListener("visibilitychange", function () {
+            if (!kuisAktif) return;
+            if (document.hidden) {
+                pelanggaran++;
+                const overlay = document.getElementById('tab-warning-overlay');
+                const countEl = document.getElementById('warn-count');
+                const msgEl = document.getElementById('warn-msg');
+                countEl.innerText = pelanggaran;
+
+                if (pelanggaran >= MAKS_PELANGGARAN) {
+                    msgEl.innerHTML = "<b>Batas pelanggaran tercapai!</b> Kuis akan otomatis diakhiri.";
+                    overlay.classList.add('show');
+                    setTimeout(() => {
+                        kuisAktif = false;
+                        overlay.classList.remove('show');
+                        finishQuiz();
+                    }, 2000);
+                } else {
+                    msgEl.innerText = "Kembali ke kuis dan jangan tinggalkan halaman lagi!";
+                    overlay.classList.add('show');
+                }
+            }
+        });
+
+        function kembaliKeKuis() {
+            document.getElementById('tab-warning-overlay').classList.remove('show');
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+        }
+
+        // Blokir klik kanan saat kuis aktif
+        document.addEventListener('contextmenu', function (e) {
+            if (kuisAktif) e.preventDefault();
+        });
+
+        // Blokir Ctrl+C/V/A/U/S/P dan F12 saat kuis aktif
+        document.addEventListener('keydown', function (e) {
+            if (!kuisAktif) return;
+            const k = e.key.toLowerCase();
+            if ((e.ctrlKey && ['c','v','a','u','s','p'].includes(k)) || e.key === 'F12') {
+                e.preventDefault();
+            }
+        });
+
+        // Deteksi keluar fullscreen = pelanggaran
+        document.addEventListener("fullscreenchange", function () {
+            if (kuisAktif && !document.fullscreenElement) {
+                pelanggaran++;
+                document.getElementById('warn-count').innerText = pelanggaran;
+                document.getElementById('tab-warning-overlay').classList.add('show');
+                document.getElementById('warn-msg').innerText = "Jangan keluar dari mode fullscreen!";
+
+                if (pelanggaran >= MAKS_PELANGGARAN) {
+                    setTimeout(() => {
+                        kuisAktif = false;
+                        document.getElementById('tab-warning-overlay').classList.remove('show');
+                        finishQuiz();
+                    }, 2000);
+                }
+            }
+        });
     </script>
 </body>
 </html>
