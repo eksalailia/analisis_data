@@ -8,6 +8,23 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; }
+
+        .quick-feedback-correct {
+            background: #d4f4e4;
+            color: #0d7a5f;
+            border: 2px solid #11998e;
+            animation: popIn 0.3s;
+        }
+        .quick-feedback-wrong {
+            background: #fde0e0;
+            color: #b02a1d;
+            border: 2px solid #e74c3c;
+            animation: popIn 0.3s;
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-600 to-indigo-900 min-h-screen flex items-center justify-center p-4">
@@ -77,6 +94,7 @@
                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg font-mono text-lg focus:outline-none transition-all"
                         placeholder="Ketik rumus di sini (misal: =SUM(A1:A10))">
                 </div>
+                <div id="quick-feedback" class="hidden mt-3 p-3 rounded-lg text-center font-bold text-sm"></div>
             </div>
 
             <button onclick="submitAnswer()" id="next-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md">
@@ -124,7 +142,6 @@
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJdqI_bRwwAmONsHmYs0Cp1n0_y9vca0wpP7FhGrUe35PJBJPKbxDp5gUTbQGZJtYVDQ/exec";
 
         // ========== BANK SOAL (25 SOAL BERBEDA DARI LATIHAN SEBELUMNYA) ==========
-        // Aturan ketat: koma saja, kutip ganda, "=" wajib, tanpa spasi, huruf bebas
         const rawQuestions = [
             { q: "Tuliskan rumus untuk menjumlahkan data angka dari sel A2 sampai A12.", keys: ["=SUM(A2:A12)"], hint: "Gunakan SUM dengan range A2:A12" },
             { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel B2 sampai B15.", keys: ["=AVERAGE(B2:B15)"], hint: "Gunakan AVERAGE" },
@@ -224,6 +241,11 @@
             inputField.disabled = false;
             inputField.className = "w-full px-4 py-3 border-2 border-gray-300 rounded-lg font-mono text-lg focus:outline-none transition-all";
 
+            // reset feedback
+            const fbReset = document.getElementById('quick-feedback');
+            fbReset.className = "hidden mt-3 p-3 rounded-lg text-center font-bold text-sm";
+            fbReset.innerHTML = "";
+
             document.getElementById('next-btn').disabled = false;
             document.getElementById('next-btn').className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md";
 
@@ -257,14 +279,26 @@
 
             const isCorrect = !isTimeout && userAnswer !== "" && cekJawaban(userAnswer, currentQ.keys);
 
-            // Feedback warna 3 detik
+            // Feedback warna + tulisan
             isFeedback = true;
             inputField.disabled = true;
+            const fb = document.getElementById('quick-feedback');
+
             if (isCorrect) {
                 inputField.classList.add('border-green-500', 'bg-green-50');
                 score += 4; // 25 soal × 4 = 100
+                fb.className = "mt-3 p-3 rounded-lg text-center font-bold text-sm quick-feedback-correct";
+                fb.innerHTML = "✅ <b>BENAR!</b> Jawabanmu tepat.";
             } else {
                 inputField.classList.add('border-red-500', 'bg-red-50');
+                fb.className = "mt-3 p-3 rounded-lg text-center font-bold text-sm quick-feedback-wrong";
+                if (isTimeout) {
+                    fb.innerHTML = "⏰ <b>WAKTU HABIS!</b> Jawaban tidak terkirim.";
+                } else if (userAnswer === "") {
+                    fb.innerHTML = "❌ <b>SALAH!</b> Kamu tidak menulis jawaban.";
+                } else {
+                    fb.innerHTML = "❌ <b>SALAH!</b> Perhatikan aturan: pakai <b>koma (,)</b>, <b>kutip ganda (\")</b>, ada <b>=</b>, tanpa spasi.";
+                }
             }
 
             detailAnswers.push({
@@ -276,10 +310,11 @@
 
             currentIndex++;
 
+            // 3 detik penanda
             setTimeout(() => {
                 if (nextBtn) nextBtn.disabled = false;
                 loadQuestion();
-            }, 3000); // 3 detik penanda
+            }, 3000);
         }
 
         function finishQuiz() {
