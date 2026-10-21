@@ -190,39 +190,41 @@
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJdqI_bRwwAmONsHmYs0Cp1n0_y9vca0wpP7FhGrUe35PJBJPKbxDp5gUTbQGZJtYVDQ/exec";
 
-        // ========== 30 SOAL ==========
+        // ========== 30 SOAL BARU (semua diganti) ==========
+        // Materi: SUM, AVERAGE, COUNT, COUNTA, MIN, MAX, IF, COUNTIF, SUMIF
+        // Tanpa AVERAGEIF, tanpa IF bersarang
         const rawQuestions = [
-            { q: "Tuliskan rumus untuk menjumlahkan data angka dari sel A2 sampai A12.", keys: ["=SUM(A2:A12)"], hint: "Gunakan SUM dengan range A2:A12" },
-            { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel B2 sampai B15.", keys: ["=AVERAGE(B2:B15)"], hint: "Gunakan AVERAGE" },
-            { q: "Tuliskan rumus untuk menghitung banyaknya sel angka dari rentang C2 hingga C20.", keys: ["=COUNT(C2:C20)"], hint: "Gunakan COUNT" },
-            { q: "Tuliskan rumus untuk mencari nilai terkecil dari data di sel D2 sampai D12.", keys: ["=MIN(D2:D12)"], hint: "Gunakan MIN" },
-            { q: "Tuliskan rumus untuk mencari nilai terbesar dari data di sel E2 sampai E30.", keys: ["=MAX(E2:E30)"], hint: "Gunakan MAX" },
-            { q: "Tuliskan rumus IF: jika sel A2 lebih besar dari 80, maka 'Sangat Baik', selain itu 'Cukup'.", keys: ["=IF(A2>80,\"Sangat Baik\",\"Cukup\")"], hint: "Format: =IF(kondisi,nilai_benar,nilai_salah)" },
-            { q: "Tuliskan rumus untuk menghitung jumlah sel yang bernilai > 80 pada rentang F2 sampai F12.", keys: ["=COUNTIF(F2:F12,\">80\")"], hint: "COUNTIF dengan kriteria \">80\"" },
-            { q: "Tuliskan rumus untuk menjumlahkan data di rentang B2:B12 jika kriterianya 'Lulus' pada rentang C2:C12.", keys: ["=SUMIF(C2:C12,\"Lulus\",B2:B12)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" },
-            { q: "Tuliskan rumus untuk menjumlahkan nilai pada sel A2, A3, dan A4 secara langsung.", keys: ["=SUM(A2,A3,A4)", "=A2+A3+A4"], hint: "SUM dengan koma atau penjumlahan langsung" },
-            { q: "Tuliskan rumus untuk mencari rata-rata dari data di rentang K2 sampai K40.", keys: ["=AVERAGE(K2:K40)"], hint: "AVERAGE" },
-            { q: "Tuliskan rumus untuk menghitung jumlah sel yang berisi teks 'Hadir' pada rentang D2:D25.", keys: ["=COUNTIF(D2:D25,\"Hadir\")"], hint: "COUNTIF dengan kriteria teks" },
-            { q: "Tuliskan rumus untuk menjumlahkan nilai pada rentang H2:H20 khusus yang bernilai di atas 60.", keys: ["=SUMIF(H2:H20,\">60\")", "=SUMIF(H2:H20,\">60\",H2:H20)"], hint: "SUMIF bisa 2 argumen jika range sama" },
-            { q: "Tuliskan rumus untuk menguji apakah nilai sel E6 sama dengan 100, jika ya tampilkan 'Sempurna', jika tidak 'Belum'.", keys: ["=IF(E6=100,\"Sempurna\",\"Belum\")"], hint: "Gunakan operator =" },
-            { q: "Tuliskan rumus untuk mengetahui nilai terendah dari rentang data G2 hingga G35.", keys: ["=MIN(G2:G35)"], hint: "MIN" },
-            { q: "Tuliskan rumus untuk mengetahui nilai tertinggi dari rentang data L2 hingga L25.", keys: ["=MAX(L2:L25)"], hint: "MAX" },
-            { q: "Tuliskan rumus untuk menghitung total sel yang terisi data (bukan angka) dari rentang M2 sampai M50.", keys: ["=COUNTA(M2:M50)"], hint: "COUNTA menghitung sel tidak kosong" },
-            { q: "Tuliskan rumus untuk mencari rata-rata dari sel P2, P3, P4, P5, dan P6.", keys: ["=AVERAGE(P2:P6)"], hint: "AVERAGE" },
-            { q: "Tuliskan rumus kondisi: Jika sel B3 kurang dari 65 maka 'Gagal', jika tidak 'Lulus'.", keys: ["=IF(B3<65,\"Gagal\",\"Lulus\")"], hint: "Gunakan operator <" },
-            { q: "Tuliskan rumus untuk menghitung berapa banyak sel di rentang N2:N15 yang bernilai 'B'.", keys: ["=COUNTIF(N2:N15,\"B\")"], hint: "COUNTIF dengan kriteria teks" },
-            { q: "Tuliskan rumus untuk menjumlahkan data di kolom Q2:Q25 khusus untuk kategori 'Sayur' yang ada di kolom R2:R25.", keys: ["=SUMIF(R2:R25,\"Sayur\",Q2:Q25)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" },
-            { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel S2 sampai S18.", keys: ["=AVERAGE(S2:S18)"], hint: "AVERAGE" },
-            { q: "Tuliskan rumus untuk menghitung berapa banyak sel di T2:T30 yang nilainya lebih dari atau sama dengan 90.", keys: ["=COUNTIF(T2:T30,\">=90\")"], hint: "COUNTIF dengan kriteria \">=90\"" },
-            { q: "Tuliskan rumus IF: jika sel U2 lebih kecil atau sama dengan 50, tampilkan 'Kurang', jika tidak 'Baik'.", keys: ["=IF(U2<=50,\"Kurang\",\"Baik\")"], hint: "Gunakan operator <=" },
-            { q: "Tuliskan rumus untuk menjumlahkan nilai di V2 sampai V15, HANYA jika nilai di W2 sampai W15 sama dengan 'Aktif'.", keys: ["=SUMIF(W2:W15,\"Aktif\",V2:V15)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" },
-            { q: "Tuliskan rumus untuk mencari nilai terbesar dari sel X2 sampai X40.", keys: ["=MAX(X2:X40)"], hint: "MAX" },
-            { q: "Tuliskan rumus untuk menghitung jumlah sel pada rentang Y2:Y30 yang nilainya lebih dari atau sama dengan 75.", keys: ["=COUNTIF(Y2:Y30,\">=75\")"], hint: "COUNTIF dengan kriteria \">=75\"" },
+            { q: "Tuliskan rumus untuk menjumlahkan seluruh nilai dari sel B3 sampai B14.", keys: ["=SUM(B3:B14)"], hint: "Gunakan SUM dengan range B3:B14" },
+            { q: "Tuliskan rumus untuk menghitung rata-rata nilai dari sel C4 sampai C18.", keys: ["=AVERAGE(C4:C18)"], hint: "Gunakan AVERAGE" },
+            { q: "Tuliskan rumus untuk menghitung banyaknya sel yang berisi angka pada rentang D5 sampai D25.", keys: ["=COUNT(D5:D25)"], hint: "COUNT menghitung sel angka" },
+            { q: "Tuliskan rumus untuk mencari nilai paling kecil dari data di sel E3 sampai E20.", keys: ["=MIN(E3:E20)"], hint: "Gunakan MIN" },
+            { q: "Tuliskan rumus untuk mencari nilai paling besar dari data di sel F6 sampai F36.", keys: ["=MAX(F6:F36)"], hint: "Gunakan MAX" },
+            { q: "Tuliskan rumus IF: jika sel G4 lebih besar dari 75, tampilkan 'Tuntas', selain itu 'Remedial'.", keys: ["=IF(G4>75,\"Tuntas\",\"Remedial\")"], hint: "Format: =IF(kondisi,nilai_benar,nilai_salah)" },
+            { q: "Tuliskan rumus untuk menghitung jumlah sel pada rentang H3:H17 yang nilainya lebih dari 85.", keys: ["=COUNTIF(H3:H17,\">85\")"], hint: "COUNTIF dengan kriteria \">85\"" },
+            { q: "Tuliskan rumus untuk menjumlahkan nilai di I4:I16 jika kategori di J4:J16 adalah 'Pria'.", keys: ["=SUMIF(J4:J16,\"Pria\",I4:I16)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" },
+            { q: "Tuliskan rumus untuk menjumlahkan isi sel K5, K6, K7, dan K8 secara langsung dengan fungsi SUM.", keys: ["=SUM(K5,K6,K7,K8)", "=SUM(K5:K8)"], hint: "SUM dengan koma atau range" },
+            { q: "Tuliskan rumus untuk menghitung rata-rata dari sel L2 sampai L22.", keys: ["=AVERAGE(L2:L22)"], hint: "AVERAGE" },
+            { q: "Tuliskan rumus untuk menghitung banyaknya sel berisi teks 'Sudah' pada rentang M3:M30.", keys: ["=COUNTIF(M3:M30,\"Sudah\")"], hint: "COUNTIF dengan kriteria teks" },
+            { q: "Tuliskan rumus untuk menjumlahkan nilai pada rentang N4:N24 yang nilainya kurang dari 50.", keys: ["=SUMIF(N4:N24,\"<50\")", "=SUMIF(N4:N24,\"<50\",N4:N24)"], hint: "SUMIF bisa 2 argumen jika range sama" },
+            { q: "Tuliskan rumus untuk menguji apakah sel O7 bernilai 0, jika ya tampilkan 'Kosong', jika tidak 'Terisi'.", keys: ["=IF(O7=0,\"Kosong\",\"Terisi\")"], hint: "Gunakan operator =" },
+            { q: "Tuliskan rumus untuk mencari nilai terendah dari rentang P3 sampai P33.", keys: ["=MIN(P3:P33)"], hint: "MIN" },
+            { q: "Tuliskan rumus untuk mencari nilai tertinggi dari rentang Q5 sampai Q45.", keys: ["=MAX(Q5:Q45)"], hint: "MAX" },
+            { q: "Tuliskan rumus untuk menghitung banyaknya sel tidak kosong pada rentang R2 sampai R40.", keys: ["=COUNTA(R2:R40)"], hint: "COUNTA menghitung sel tidak kosong" },
+            { q: "Tuliskan rumus untuk mencari rata-rata dari sel S3 sampai S13.", keys: ["=AVERAGE(S3:S13)"], hint: "AVERAGE" },
+            { q: "Tuliskan rumus kondisi: jika sel T5 lebih besar atau sama dengan 60, tampilkan 'Lulus', jika tidak 'Gagal'.", keys: ["=IF(T5>=60,\"Lulus\",\"Gagal\")"], hint: "Gunakan operator >=" },
+            { q: "Tuliskan rumus untuk menghitung banyaknya sel di U4:U20 yang bernilai 'Ya'.", keys: ["=COUNTIF(U4:U20,\"Ya\")"], hint: "COUNTIF dengan kriteria teks" },
+            { q: "Tuliskan rumus untuk menjumlahkan nilai di V5:V25 khusus untuk kategori 'Buah' pada W5:W25.", keys: ["=SUMIF(W5:W25,\"Buah\",V5:V25)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" },
+            { q: "Tuliskan rumus untuk mencari rata-rata dari sel X4 sampai X16.", keys: ["=AVERAGE(X4:X16)"], hint: "AVERAGE" },
+            { q: "Tuliskan rumus untuk menghitung banyaknya sel di Y3:Y33 yang nilainya kurang dari atau sama dengan 70.", keys: ["=COUNTIF(Y3:Y33,\"<=70\")"], hint: "COUNTIF dengan kriteria \"<=70\"" },
+            { q: "Tuliskan rumus IF: jika sel Z6 lebih kecil dari 50, tampilkan 'Rendah', jika tidak 'Tinggi'.", keys: ["=IF(Z6<50,\"Rendah\",\"Tinggi\")"], hint: "Gunakan operator <" },
+            { q: "Tuliskan rumus untuk menjumlahkan AA4:AA24 jika nilai di AB4:AB24 sama dengan 'Selesai'.", keys: ["=SUMIF(AB4:AB24,\"Selesai\",AA4:AA24)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" },
+            { q: "Tuliskan rumus untuk mencari nilai terbesar dari sel AC6 sampai AC26.", keys: ["=MAX(AC6:AC26)"], hint: "MAX" },
+            { q: "Tuliskan rumus untuk menghitung banyaknya sel pada rentang AD3:AD23 yang nilainya lebih dari atau sama dengan 80.", keys: ["=COUNTIF(AD3:AD23,\">=80\")"], hint: "COUNTIF dengan kriteria \">=80\"" },
             // ===== 4 SOAL BARU =====
-            { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel Z2 sampai Z20.", keys: ["=AVERAGE(Z2:Z20)"], hint: "AVERAGE" },
-            { q: "Tuliskan rumus untuk menghitung jumlah sel pada rentang AA2:AA25 yang nilainya kurang dari 60.", keys: ["=COUNTIF(AA2:AA25,\"<60\")"], hint: "COUNTIF dengan kriteria \"<60\"" },
-            { q: "Tuliskan rumus untuk menghitung jumlah sel pada rentang AE2:AE20 yang nilainya sama dengan 100.", keys: ["=COUNTIF(AE2:AE20,100)"], hint: "COUNTIF dengan kriteria angka 100" },
-            { q: "Tuliskan rumus untuk menjumlahkan nilai di AC2:AC20, HANYA jika nilai di AD2:AD20 lebih besar dari 50.", keys: ["=SUMIF(AD2:AD20,\">50\",AC2:AC20)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" }
+            { q: "Tuliskan rumus untuk mencari nilai rata-rata dari sel AE5 sampai AE15.", keys: ["=AVERAGE(AE5:AE15)"], hint: "AVERAGE" },
+            { q: "Tuliskan rumus untuk menghitung banyaknya sel pada rentang AF4:AF24 yang nilainya lebih dari 65.", keys: ["=COUNTIF(AF4:AF24,\">65\")"], hint: "COUNTIF dengan kriteria \">65\"" },
+            { q: "Tuliskan rumus untuk menghitung banyaknya sel pada rentang AG3:AG13 yang nilainya sama dengan 0.", keys: ["=COUNTIF(AG3:AG13,0)", "=COUNTIF(AG3:AG13,\"0\")", "=COUNTIF(AG3:AG13,\"=0\")"], hint: "COUNTIF dengan kriteria angka 0" },
+            { q: "Tuliskan rumus untuk menjumlahkan nilai di AH5:AH25 jika nilai di AI5:AI25 lebih kecil dari 40.", keys: ["=SUMIF(AI5:AI25,\"<40\",AH5:AH25)"], hint: "SUMIF(range_kriteria,kriteria,range_jumlah)" }
         ];
 
         let questions = [];
@@ -249,12 +251,22 @@
             return arr;
         }
 
-        // Normalisasi jawaban: huruf kecil + samakan pemisah ; menjadi ,
+        /**
+         * Normalisasi jawaban agar toleran terhadap:
+         * - huruf besar/kecil
+         * - spasi (dihapus semua, termasuk non-breaking & zero-width)
+         * - pemisah argumen ; maupun ,
+         * - kutip tunggal ' maupun kutip ganda "
+         */
         function normalisasi(str) {
             if (str === null || str === undefined) return "";
             return String(str)
                 .toLowerCase()
-                .replace(/;/g, ","); // titik koma dianggap sama dengan koma
+                .replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]+/g, "") // hapus semua spasi
+                .replace(/;/g, ",")           // titik koma -> koma
+                .replace(/[’‘`´]/g, "'")      // unicode kutip -> kutip tunggal
+                .replace(/[“”]/g, '"')        // unicode kutip -> kutip ganda
+                .replace(/'/g, '"');          // kutip tunggal -> kutip ganda
         }
 
         function cekJawaban(userInput, keys) {
@@ -355,7 +367,6 @@
 
             if (isCorrect) {
                 inputField.classList.add('border-green-500', 'bg-green-50');
-                // Nilai menyesuaikan jumlah soal (30 soal -> tiap soal ~3.33)
                 score += (100 / rawQuestions.length);
                 fb.className = "mt-3 p-3 rounded-lg text-center font-bold text-sm quick-feedback-correct";
                 fb.innerHTML = "✅ <b>BENAR!</b> Jawabanmu tepat.";
@@ -367,7 +378,9 @@
                 } else if (userAnswer === "") {
                     fb.innerHTML = "❌ <b>SALAH!</b> Kamu tidak menulis jawaban.";
                 } else {
-                    fb.innerHTML = "❌ <b>SALAH!</b> Perhatikan aturan: pakai <b>koma (,)</b> atau <b>titik koma (;)</b>, <b>kutip ganda (\")</b>, ada <b>=</b>, tanpa spasi.";
+                    fb.innerHTML = "❌ <b>SALAH!</b> Perhatikan aturan: pakai <b>koma (,)</b> atau <b>titik koma (;)</b>, <b>kutip ganda (\")</b>, ada <b>=</b>, tanpa spasi.<br>" +
+                        "<span class='font-normal text-xs'>Jawabanmu: <code>" + escapeHtml(userAnswer) + "</code><br>" +
+                        "Kunci: <code>" + escapeHtml(currentQ.keys[0]) + "</code></span>";
                 }
             }
 
@@ -399,7 +412,6 @@
             document.getElementById('res-absen').innerText = studentData.absen;
             document.getElementById('res-kelas').innerText = studentData.kelas;
             document.getElementById('res-pelanggaran').innerText = pelanggaran;
-            // Bulatkan skor agar rapi (0-100)
             const finalScore = Math.round(score);
             document.getElementById('res-score').innerText = finalScore;
 
