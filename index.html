@@ -77,7 +77,7 @@
         <!-- 1. FORM IDENTITAS -->
         <div id="identity-section" class="space-y-4">
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 text-blue-700 text-sm mb-4">
-                Silakan isi identitas dengan benar sebelum memulai kuis. Soal akan diacak dan memiliki batas waktu <b>30 menit</b> untuk seluruh soal. Anda <b>bisa kembali</b> ke soal sebelumnya dan <b>bisa melewati</b> soal. Soal yang dilewati akan <b>muncul lagi</b> di akhir.
+                Silakan isi identitas dengan benar sebelum memulai kuis. Soal akan diacak dan memiliki batas waktu <b>30 menit</b> untuk seluruh soal. Anda <b>bisa kembali</b> ke soal sebelumnya dan <b>bisa melewati</b> soal (maksimal 1x per soal). Soal yang dilewati akan <b>muncul lagi</b> di akhir, dan saat muncul lagi Anda <b>wajib menjawab</b>.
             </div>
             <div class="bg-amber-50 border-l-4 border-amber-500 p-4 text-amber-800 text-xs space-y-1">
                 <p class="font-bold">⚠️ Aturan Penulisan (WAJIB):</p>
@@ -251,6 +251,11 @@
         let isFeedback = false;
         let reviewData = [];         // data pembahasan final
 
+        // === PELACAKAN SKIP: berapa kali tiap soal asli sudah dilewati ===
+        // Gunakan referensi objek soal sebagai key (Map), jadi tetap valid
+        // meskipun soal yang sama disalin ke array questions.
+        let skipCountMap = new Map(); // soalObj -> jumlah skip (0/1)
+
         // Anti-curang
         let pelanggaran = 0;
         const MAKS_PELANGGARAN = 3;
@@ -308,6 +313,7 @@
             userAnswers = new Array(questions.length).fill("");
             answerStatus = new Array(questions.length).fill(null);
             reviewData = [];
+            skipCountMap = new Map(); // reset pelacakan skip
             pelanggaran = 0;
             kuisAktif = true;
             currentIndex = 0;
@@ -342,9 +348,8 @@
             // Jika sudah melewati semua soal, cek apakah ada soal yang dilewati
             if (currentIndex >= questions.length) {
                 if (skippedIndices.length > 0) {
-                    // Ambil soal yang dilewati, tambahkan kembali ke antrean
                     const nextSkipped = skippedIndices.shift();
-                    // Buat salinan soal yang dilewati di akhir array
+                    // Salin soal yang dilewati ke akhir array
                     questions.push(questions[nextSkipped]);
                     userAnswers.push("");
                     answerStatus.push(null);
@@ -382,12 +387,40 @@
                 ? "w-1/4 bg-gray-300 text-gray-500 font-semibold py-3 rounded-lg shadow-md cursor-not-allowed text-sm"
                 : "w-1/4 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md text-sm";
 
-            // Jika soal ini sudah pernah dijawab, nonaktifkan skip
+            // === CEK APAKAH SOAL INI SUDAH PERNAH DILEWATI ===
+            const soalAsli = currentQ; // referensi objek soal asli
+            const jumlahSkip = skipCountMap.get(soalAsli) || 0;
             const sudahDijawab = answerStatus[currentIndex] !== null && answerStatus[currentIndex] !== "SKIP";
-            skipBtn.disabled = sudahDijawab;
-            skipBtn.className = sudahDijawab
-                ? "w-1/4 bg-gray-300 text-gray-500 font-semibold py-3 rounded-lg shadow-md cursor-not-allowed text-sm"
-                : "w-1/4 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md text-sm";
+            const sudahPernahSkip = jumlahSkip >= 1;
+
+            // Skip hanya boleh jika: belum dijawab DAN belum pernah dilewati
+            const bolehSkip = !sudahDijawab && !sudahPernahSkip;
+
+            skipBtn.disabled = !bolehSkip;
+            if (bolehSkip) {
+                skipBtn.className = "w-1/4 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md text-sm";
+                skipBtn.innerText = "Lewati ⏭";
+                skipBtn.title = "Lewati soal ini (hanya bisa 1x)";
+            } else if (sudahPernahSkip && !sudahDijawab) {
+                // Soal ini pernah dilewati, sekarang wajib dijawab
+                skipBtn.className = "w-1/4 bg-gray-300 text-gray-500 font-semibold py-3 rounded-lg shadow-md cursor-not-allowed text-sm";
+                skipBtn.innerText = "Wajib Jawab";
+                skipBtn.title = "Soal ini sudah pernah dilewati. Anda wajib menjawab sekarang.";
+            } else {
+                skipBtn.className = "w-1/4 bg-gray-300 text-gray-500 font-semibold py-3 rounded-lg shadow-md cursor-not-allowed text-sm";
+                skipBtn.innerText = "Lewati ⏭";
+                skipBtn.title = "Tidak bisa dilewati";
+            }
+
+            // Jika wajib jawab, tampilkan info di hint
+            const hintEl = document.getElementById('question-hint');
+            if (sudahPernahSkip && !sudahDijawab) {
+                hintEl.innerHTML = `<span class="text-amber-700 font-bold">⚠️ Soal ini sudah pernah dilewati. Anda WAJIB menjawab sekarang.</span><br><span class="text-gray-500">Petunjuk: Gunakan huruf kapital/kecil bebas, contoh: =SUM(A1:A5)</span>`;
+                hintEl.className = "bg-amber-50 border border-amber-300 p-3 rounded-lg text-xs md:text-sm text-gray-600 font-mono mb-4";
+            } else {
+                hintEl.innerHTML = `Petunjuk: Gunakan huruf kapital/kecil bebas, contoh: =SUM(A1:A5)`;
+                hintEl.className = "bg-gray-50 border p-3 rounded-lg text-xs md:text-sm text-gray-600 font-mono mb-4";
+            }
 
             const isLast = currentIndex === questions.length - 1 && skippedIndices.length === 0;
             nextBtn.innerText = isLast ? "Selesai & Kirim" : "Kirim & Lanjut →";
@@ -421,11 +454,24 @@
 
         function skipQuestion() {
             if (isFeedback) return;
-            if (answerStatus[currentIndex] !== null && answerStatus[currentIndex] !== "SKIP") return;
+
+            const currentQ = questions[currentIndex];
+            const jumlahSkip = skipCountMap.get(currentQ) || 0;
+
+            // Validasi: hanya boleh skip jika belum pernah skip
+            if (jumlahSkip >= 1) {
+                return; // tombol sudah disabled, ini safety
+            }
+
+            // Validasi: hanya boleh skip jika belum dijawab
+            if (answerStatus[currentIndex] !== null && answerStatus[currentIndex] !== "SKIP") {
+                return;
+            }
 
             simpanJawabanSementara();
 
-            // Tandai sebagai dilewati
+            // Catat skip
+            skipCountMap.set(currentQ, jumlahSkip + 1);
             answerStatus[currentIndex] = "SKIP";
             if (!skippedIndices.includes(currentIndex)) {
                 skippedIndices.push(currentIndex);
@@ -436,7 +482,6 @@
                 currentIndex++;
                 loadQuestion();
             } else {
-                // Sudah di akhir, cek apakah ada yang dilewati
                 if (skippedIndices.length > 0) {
                     const nextSkipped = skippedIndices.shift();
                     questions.push(questions[nextSkipped]);
@@ -457,9 +502,22 @@
             const userAnswer = userAnswers[currentIndex];
             const currentQ = questions[currentIndex];
 
-            // Jika kosong, jadikan sebagai skip
+            // Jika kosong, jadikan sebagai skip (hanya boleh jika belum pernah skip)
             if (userAnswer === "") {
+                const jumlahSkip = skipCountMap.get(currentQ) || 0;
+
+                if (jumlahSkip >= 1) {
+                    // Soal ini sudah pernah dilewati -> wajib dijawab
+                    isFeedback = true;
+                    const fb = document.getElementById('quick-feedback');
+                    fb.className = "mt-3 p-3 rounded-lg text-center font-bold text-sm quick-feedback-wrong";
+                    fb.innerHTML = "⚠️ <b>WAJIB DIJAWAB!</b> Soal ini sudah pernah Anda lewati. Silakan tulis jawaban.";
+                    isFeedback = false; // biarkan user coba lagi
+                    return;
+                }
+
                 // Anggap skip
+                skipCountMap.set(currentQ, jumlahSkip + 1);
                 answerStatus[currentIndex] = "SKIP";
                 if (!skippedIndices.includes(currentIndex)) {
                     skippedIndices.push(currentIndex);
@@ -467,7 +525,7 @@
                 isFeedback = true;
                 const fb = document.getElementById('quick-feedback');
                 fb.className = "mt-3 p-3 rounded-lg text-center font-bold text-sm quick-feedback-skip";
-                fb.innerHTML = "⏭ <b>DILEWATI!</b> Jawaban kosong, soal akan muncul lagi di akhir.";
+                fb.innerHTML = "⏭ <b>DILEWATI!</b> Jawaban kosong, soal akan muncul lagi di akhir (kesempatan lewati habis).";
 
                 document.getElementById('next-btn').disabled = true;
                 document.getElementById('prev-btn').disabled = true;
@@ -552,12 +610,12 @@
                 document.exitFullscreen().catch(() => {});
             }
 
-            // Susun review final: gabungkan reviewData yang ada
+            // Susun review final
             const finalReview = [];
             for (let i = 0; i < reviewData.length; i++) {
                 if (reviewData[i]) finalReview.push(reviewData[i]);
             }
-            // Tambahkan soal yang belum dijawab (jika waktu habis)
+            // Tambahkan soal yang belum dijawab (waktu habis / dll)
             for (let i = 0; i < questions.length; i++) {
                 if (!reviewData[i]) {
                     finalReview.push({
