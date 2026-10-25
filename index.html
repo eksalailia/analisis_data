@@ -71,7 +71,7 @@
         <!-- 1. FORM IDENTITAS -->
         <div id="identity-section" class="space-y-4">
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 text-blue-700 text-sm mb-4">
-                Silakan isi identitas dengan benar sebelum memulai kuis. Soal akan diacak dan memiliki batas waktu <b>60 detik (1 menit)</b> per soal tanpa tombol kembali.
+                Silakan isi identitas dengan benar sebelum memulai kuis. Soal akan diacak dan memiliki batas waktu <b>30 menit</b> untuk seluruh soal. Anda <b>bisa kembali</b> ke soal sebelumnya.
             </div>
             <div class="bg-amber-50 border-l-4 border-amber-500 p-4 text-amber-800 text-xs space-y-1">
                 <p class="font-bold">⚠️ Aturan Penulisan (WAJIB):</p>
@@ -114,7 +114,7 @@
                 <span id="question-progress">Soal 1 dari 30</span>
                 <div class="flex items-center gap-1 bg-red-100 text-red-600 px-3 py-1 rounded-full">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span id="timer" class="font-bold">60</span>s
+                    <span id="timer" class="font-bold">30:00</span>
                 </div>
             </div>
 
@@ -136,9 +136,14 @@
                 <div id="quick-feedback" class="hidden mt-3 p-3 rounded-lg text-center font-bold text-sm"></div>
             </div>
 
-            <button onclick="submitAnswer()" id="next-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md">
-                Kirim & Lanjut
-            </button>
+            <div class="flex gap-3">
+                <button onclick="prevQuestion()" id="prev-btn" class="w-1/3 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md">
+                    ← Kembali
+                </button>
+                <button onclick="submitAnswer()" id="next-btn" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md">
+                    Kirim & Lanjut →
+                </button>
+            </div>
         </div>
 
         <!-- 3. SECTION HASIL -->
@@ -191,8 +196,6 @@
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJdqI_bRwwAmONsHmYs0Cp1n0_y9vca0wpP7FhGrUe35PJBJPKbxDp5gUTbQGZJtYVDQ/exec";
 
         // ========== 30 SOAL ==========
-        // Materi: SUM, AVERAGE, COUNT, COUNTA, MIN, MAX, IF, COUNTIF, SUMIF
-        // Tanpa AVERAGEIF, tanpa IF bersarang
         const rawQuestions = [
             { q: "Tuliskan rumus untuk menjumlahkan data pada sel C2 sampai C10.", keys: ["=SUM(C2:C10)"], hint: "Gunakan SUM dengan range C2:C10" },
             { q: "Tuliskan rumus untuk mencari rata-rata dari sel D3 sampai D13.", keys: ["=AVERAGE(D3:D13)"], hint: "Gunakan AVERAGE" },
@@ -229,10 +232,11 @@
         let questions = [];
         let currentIndex = 0;
         let score = 0;
-        let timer;
-        let timeLeft = 60; // 1 menit
+        let timerInterval;
+        let timeLeft = 30 * 60; // 30 menit dalam detik
         let studentData = {};
         let detailAnswers = [];
+        let userAnswers = []; // Menyimpan jawaban sementara per soal
         let isSubmitted = false;
         let isFeedback = false;
 
@@ -250,48 +254,31 @@
             return arr;
         }
 
-        /**
-         * Normalisasi jawaban (TOLERAN, agar jawaban benar tidak salah dinilai):
-         * - huruf besar/kecil -> lowercase
-         * - SPASI diabaikan (dihapus semua, termasuk non-breaking & zero-width)
-         * - pemisah ; dianggap sama dengan ,
-         * - KUTIP GANDA unicode (“ ”) -> kutip ganda standar (")
-         * - Kutip tunggal (') TIDAK diubah -> tetap SALAH (sesuai aturan)
-         */
         function normalisasi(str) {
             if (str === null || str === undefined) return "";
             return String(str)
                 .toLowerCase()
-                // hapus semua spasi (spasi biasa, tab, newline, non-breaking, zero-width)
                 .replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]+/g, "")
-                // titik koma dianggap sama dengan koma
                 .replace(/;/g, ",")
-                // kutip ganda unicode -> kutip ganda standar
-                .replace(/[“”]/g, '"')
-                // kutip tunggal TIDAK diubah (tetap salah)
-                ;
+                .replace(/[“”]/g, '"');
         }
 
-        /**
-         * Pengecekan cadangan yang LEBIH longgar:
-         * membandingkan hanya "isi" tanpa memperhatikan spasi (sudah dihapus di normalisasi)
-         * dan menyamakan kutip ganda. Tetap tidak mengubah kutip tunggal.
-         */
         function cekJawaban(userInput, keys) {
             const userNorm = normalisasi(userInput);
             if (!userNorm) return false;
-
-            // Cek utama: cocok persis setelah normalisasi
             if (keys.some(k => normalisasi(k) === userNorm)) return true;
-
-            // Cek cadangan: bandingkan dengan semua varian yang sudah dinormalisasi
-            // (berjaga-jaga jika ada karakter aneh yang lolos)
             const userSquash = userNorm.replace(/[^a-z0-9,+\-*/<>=:"()]/g, "");
             return keys.some(k => {
                 const keyNorm = normalisasi(k);
                 const keySquash = keyNorm.replace(/[^a-z0-9,+\-*/<>=:"()]/g, "");
                 return keySquash === userSquash;
             });
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${m}:${s.toString().padStart(2, '0')}`;
         }
 
         function startQuiz() {
@@ -306,16 +293,31 @@
 
             studentData = { nama, absen, kelas };
             questions = shuffleArray(rawQuestions);
+            userAnswers = new Array(questions.length).fill("");
             pelanggaran = 0;
             kuisAktif = true;
+            currentIndex = 0;
 
             document.getElementById('identity-section').classList.add('hidden');
             document.getElementById('quiz-section').classList.remove('hidden');
 
-            // Coba fullscreen
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen().catch(() => {});
             }
+
+            // Timer total 30 menit
+            clearInterval(timerInterval);
+            timeLeft = 30 * 60;
+            document.getElementById('timer').innerText = formatTime(timeLeft);
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = formatTime(timeLeft);
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    finishQuiz();
+                }
+            }, 1000);
 
             loadQuestion();
         }
@@ -326,11 +328,7 @@
                 return;
             }
 
-            clearInterval(timer);
-            timeLeft = 60; // 1 menit per soal
-            document.getElementById('timer').innerText = timeLeft;
             isFeedback = false;
-
             const currentQ = questions[currentIndex];
             document.getElementById('question-progress').innerText = `Soal ${currentIndex + 1} dari ${questions.length}`;
             document.getElementById('question-text').innerText = currentQ.q;
@@ -339,7 +337,7 @@
             document.getElementById('progress-bar').style.width = `${progressPercent}%`;
 
             const inputField = document.getElementById('user-answer');
-            inputField.value = "";
+            inputField.value = userAnswers[currentIndex] || "";
             inputField.disabled = false;
             inputField.className = "w-full px-4 py-3 border-2 border-gray-300 rounded-lg font-mono text-lg focus:outline-none transition-all";
 
@@ -347,8 +345,20 @@
             fbReset.className = "hidden mt-3 p-3 rounded-lg text-center font-bold text-sm";
             fbReset.innerHTML = "";
 
-            document.getElementById('next-btn').disabled = false;
-            document.getElementById('next-btn').className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md";
+            // Atur tombol
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            prevBtn.disabled = currentIndex === 0;
+            prevBtn.className = currentIndex === 0
+                ? "w-1/3 bg-gray-300 text-gray-500 font-semibold py-3 rounded-lg shadow-md cursor-not-allowed"
+                : "w-1/3 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md";
+
+            const isLast = currentIndex === questions.length - 1;
+            nextBtn.innerText = isLast ? "Selesai & Kirim" : "Kirim & Lanjut →";
+            nextBtn.disabled = false;
+            nextBtn.className = isLast
+                ? "w-2/3 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md"
+                : "w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md";
 
             inputField.onkeydown = (e) => {
                 if (e.key === "Enter") {
@@ -357,44 +367,43 @@
                 }
             };
 
-            timer = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timer').innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    submitAnswer(true);
-                }
-            }, 1000);
+            inputField.focus();
         }
 
-        function submitAnswer(isTimeout = false) {
-            if (isFeedback) return;
-            clearInterval(timer);
-
-            const nextBtn = document.getElementById('next-btn');
-            if (nextBtn) nextBtn.disabled = true;
-
+        function simpanJawabanSementara() {
             const inputField = document.getElementById('user-answer');
-            const userAnswer = inputField.value.trim();
-            const currentQ = questions[currentIndex];
+            userAnswers[currentIndex] = inputField.value.trim();
+        }
 
-            const isCorrect = !isTimeout && userAnswer !== "" && cekJawaban(userAnswer, currentQ.keys);
+        function prevQuestion() {
+            simpanJawabanSementara();
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadQuestion();
+            }
+        }
+
+        function submitAnswer() {
+            if (isFeedback) return;
+            simpanJawabanSementara();
+
+            const userAnswer = userAnswers[currentIndex];
+            const currentQ = questions[currentIndex];
+            const isCorrect = userAnswer !== "" && cekJawaban(userAnswer, currentQ.keys);
 
             isFeedback = true;
+            const inputField = document.getElementById('user-answer');
             inputField.disabled = true;
             const fb = document.getElementById('quick-feedback');
 
             if (isCorrect) {
                 inputField.classList.add('border-green-500', 'bg-green-50');
-                score += (100 / rawQuestions.length);
                 fb.className = "mt-3 p-3 rounded-lg text-center font-bold text-sm quick-feedback-correct";
                 fb.innerHTML = "✅ <b>BENAR!</b> Jawabanmu tepat.";
             } else {
                 inputField.classList.add('border-red-500', 'bg-red-50');
                 fb.className = "mt-3 p-3 rounded-lg text-center font-bold text-sm quick-feedback-wrong";
-                if (isTimeout) {
-                    fb.innerHTML = "⏰ <b>WAKTU HABIS!</b> Jawaban tidak terkirim.";
-                } else if (userAnswer === "") {
+                if (userAnswer === "") {
                     fb.innerHTML = "❌ <b>SALAH!</b> Kamu tidak menulis jawaban.";
                 } else {
                     fb.innerHTML = "❌ <b>SALAH!</b> Perhatikan aturan: pakai <b>koma (,)</b> atau <b>titik koma (;)</b>, teks wajib pakai <b>kutip ganda (\")</b> (kutip tunggal salah), ada <b>=</b>.<br>" +
@@ -403,26 +412,41 @@
                 }
             }
 
-            detailAnswers.push({
+            // Simpan detail untuk pembahasan akhir
+            detailAnswers[currentIndex] = {
                 soal: currentQ.q,
-                jawabanSiswa: userAnswer || "(Tidak dijawab / Waktu habis)",
+                jawabanSiswa: userAnswer || "(Tidak dijawab)",
                 kunciJawaban: currentQ.keys[0],
                 status: isCorrect ? "BENAR" : "SALAH"
-            });
+            };
 
-            currentIndex++;
+            // Nonaktifkan tombol sebentar
+            document.getElementById('next-btn').disabled = true;
+            document.getElementById('prev-btn').disabled = true;
 
             setTimeout(() => {
-                if (nextBtn) nextBtn.disabled = false;
-                loadQuestion();
-            }, 3000);
+                if (currentIndex < questions.length - 1) {
+                    currentIndex++;
+                    loadQuestion();
+                } else {
+                    finishQuiz();
+                }
+            }, 2000);
         }
 
         function finishQuiz() {
             kuisAktif = false;
+            clearInterval(timerInterval);
             if (document.fullscreenElement) {
                 document.exitFullscreen().catch(() => {});
             }
+
+            // Hitung skor akhir dari detailAnswers
+            let correctCount = 0;
+            detailAnswers.forEach(item => {
+                if (item && item.status === "BENAR") correctCount++;
+            });
+            const finalScore = Math.round((correctCount / rawQuestions.length) * 100);
 
             document.getElementById('quiz-section').classList.add('hidden');
             document.getElementById('result-section').classList.remove('hidden');
@@ -431,7 +455,6 @@
             document.getElementById('res-absen').innerText = studentData.absen;
             document.getElementById('res-kelas').innerText = studentData.kelas;
             document.getElementById('res-pelanggaran').innerText = pelanggaran;
-            const finalScore = Math.round(score);
             document.getElementById('res-score').innerText = finalScore;
 
             showRewardOrFeedback(finalScore);
@@ -477,6 +500,7 @@
             container.innerHTML = "";
 
             detailAnswers.forEach((item, idx) => {
+                if (!item) return;
                 const isCorrect = item.status === "BENAR";
                 const borderClass = isCorrect ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50";
                 const statusBadge = isCorrect
@@ -527,7 +551,7 @@
                 kelas: studentData.kelas,
                 nilai: finalScore,
                 pelanggaran: pelanggaran,
-                detail: detailAnswers
+                detail: detailAnswers.filter(d => d)
             };
 
             try {
@@ -551,69 +575,4 @@
             }
         }
 
-        // ========== ANTI-CURANG ==========
-        document.addEventListener("visibilitychange", function () {
-            if (!kuisAktif) return;
-            if (document.hidden) {
-                pelanggaran++;
-                const overlay = document.getElementById('tab-warning-overlay');
-                const countEl = document.getElementById('warn-count');
-                const msgEl = document.getElementById('warn-msg');
-                countEl.innerText = pelanggaran;
-
-                if (pelanggaran >= MAKS_PELANGGARAN) {
-                    msgEl.innerHTML = "<b>Batas pelanggaran tercapai!</b> Kuis akan otomatis diakhiri.";
-                    overlay.classList.add('show');
-                    setTimeout(() => {
-                        kuisAktif = false;
-                        overlay.classList.remove('show');
-                        finishQuiz();
-                    }, 2000);
-                } else {
-                    msgEl.innerText = "Kembali ke kuis dan jangan tinggalkan halaman lagi!";
-                    overlay.classList.add('show');
-                }
-            }
-        });
-
-        function kembaliKeKuis() {
-            document.getElementById('tab-warning-overlay').classList.remove('show');
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            }
-        }
-
-        // Blokir klik kanan saat kuis aktif
-        document.addEventListener('contextmenu', function (e) {
-            if (kuisAktif) e.preventDefault();
-        });
-
-        // Blokir Ctrl+C/V/A/U/S/P dan F12 saat kuis aktif
-        document.addEventListener('keydown', function (e) {
-            if (!kuisAktif) return;
-            const k = e.key.toLowerCase();
-            if ((e.ctrlKey && ['c','v','a','u','s','p'].includes(k)) || e.key === 'F12') {
-                e.preventDefault();
-            }
-        });
-
-        // Deteksi keluar fullscreen = pelanggaran
-        document.addEventListener("fullscreenchange", function () {
-            if (kuisAktif && !document.fullscreenElement) {
-                pelanggaran++;
-                document.getElementById('warn-count').innerText = pelanggaran;
-                document.getElementById('tab-warning-overlay').classList.add('show');
-                document.getElementById('warn-msg').innerText = "Jangan keluar dari mode fullscreen!";
-
-                if (pelanggaran >= MAKS_PELANGGARAN) {
-                    setTimeout(() => {
-                        kuisAktif = false;
-                        document.getElementById('tab-warning-overlay').classList.remove('show');
-                        finishQuiz();
-                    }, 2000);
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+        // ========== ANTI-CURANG =========
